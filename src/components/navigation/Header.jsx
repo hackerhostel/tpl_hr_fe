@@ -8,6 +8,7 @@ import {signOut} from 'aws-amplify/auth';
 import {selectUser} from "../../state/slice/authSlice.js";
 import Notification from "./NotificationPopup.jsx"
 import HeaderTaskCreateComponent from "../task/create/HeaderTaskCreateComponent.jsx";
+import {Link, useHistory, useLocation} from 'react-router-dom';
 
 const Header = () => {
   const dispatch = useDispatch();
@@ -17,6 +18,8 @@ const Header = () => {
   const [loading, setLoading] = useState(false);
   const [isOpenPopUp, setIsOpenPopUp] = useState(false);
   const [newHeaderTaskModalOpen, setNewHeaderTaskModalOpen] = useState(false);
+  const location = useLocation();
+    const history = useHistory();
 
   const handleChange = (e, value) => {
     dispatch(doSwitchProject(Number(value)));
@@ -28,6 +31,23 @@ const Header = () => {
     const initials = nameParts.map((part) => part.charAt(0).toUpperCase()).join("");
     return initials;
   };
+
+   const MenuItem = ({ link, Icon }) => (
+      <Link
+        to={link}
+        className={`w-12 h-12 ${
+          location.pathname === link
+            ? 'bg-primary-pink'
+            : 'bg-gray-200 hover:bg-secondary-pink'
+        } rounded-full flex items-center justify-center transition-colors duration-200`}
+      >
+        <Icon
+          className={`w-6 h-6 ${
+            location.pathname === link ? 'text-white' : 'text-gray-700'
+          }`}
+        />
+      </Link>
+    );
 
 
   const getProjectOptions = useCallback(() => {
@@ -75,7 +95,7 @@ const Header = () => {
           <button
               className="w-24 h-10 text-white rounded-lg border border-primary-pink bg-primary-pink cursor-pointer disabled:cursor-not-allowed disabled:text-gray-300 disabled:border-gray-300"
               onClick={() => setNewHeaderTaskModalOpen(true)}>
-            New Task
+            + Employee
           </button>
         </div>
         <div>

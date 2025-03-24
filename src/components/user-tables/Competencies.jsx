@@ -22,7 +22,7 @@ const feedbackData = [
   },
 ];
 
-const KPIs = () => {
+const Competencies = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const feedback = feedbackData[currentIndex];
 
@@ -39,37 +39,26 @@ const KPIs = () => {
   };
 
   return (
-    <div style={{width:"100%"}}  className="bg-white rounded-md p-5 ">
+    <div style={{width:"100%"}} className="bg-white rounded-md p-5 ">
       {/* Header */}
       <div className="flex space-x-3 items-center border-b pb-2">
         <div>
           <span className="text-lg font-semibold text-text-color">
-            KPIs ({currentIndex + 1} / {feedbackData.length})
+          Competencies ({currentIndex + 1} / {feedbackData.length})
           </span>
         </div>
-
-        <div>
-          <div className="flex text-text-color">
-          <span>Active working hours</span>
-          <span className="ml-36">35</span>
-          </div>
-          
-        </div>
-
       </div>
 
       {/* User Info */}
       <div className="mt-3">
-        <div>
-          <span className="text-black font-bold">Description</span>
-          <p className="mt-2 text-text-color  ">Tracks the active working hours on a weekly basis,</p>
+        <div className="flex justify-between">
+          <span className="text-text-color font-bold">Back-End Development Knowledge</span>
+          <span className="bg-purple-200 text-purple-800 text-xs font-semibold px-2 py-1 rounded">
+            Advanced
+          </span>
         </div>
 
-        <div className="mt-4">
-          <span className="text-black font-bold">Formula</span>
-          <p className="mt-2 text-text-color">(worked hours / allocated worked hours) * 100</p>
-        </div>
-
+    
         <div className="mt-4">
           <p className="text-text-color">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation </p>
         </div>
@@ -109,4 +98,4 @@ const KPIs = () => {
   );
 };
 
-export default KPIs;
+export default Competencies;

@@ -10,10 +10,13 @@ import axios from 'axios';
 import {ProjectCreateSchema} from '../../utils/validationSchemas.js';
 import {useToasts} from 'react-toast-notifications';
 import {doGetWhoAmI} from "../../state/slice/authSlice.js";
+import FormTextArea from "../FormTextArea.jsx" 
+
 
 const CreateNewProjectPopup = ({ isOpen, onClose }) => {
     const dispatch = useDispatch();
     const { addToast } = useToasts();
+    
 
     const projectTypes = useSelector(setProjectType);
 
@@ -27,18 +30,46 @@ const CreateNewProjectPopup = ({ isOpen, onClose }) => {
     const [formValues, setFormValues] = useState({
         prefix: '',
         name: '',
-        projectType: ''
+        projectType: '',
+        description: ''
     });
     
     const [isValidationErrorsShown, setIsValidationErrorsShown] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [formErrors] = useValidation(ProjectCreateSchema, formValues); 
+    const [formErrors, setFormErrors] = useState({});
 
    
     const handleFormChange = (name, value) => {
         setFormValues({ ...formValues, [name]: value });
         setIsValidationErrorsShown(false);
     };
+
+    const handleChange = (e, value) => {
+      setFormValues((prevValues) => ({
+          ...prevValues,
+          [e.target.name]: value,
+      }));
+
+      // Optional: Clear errors when user starts typing
+      if (formErrors[e.target.name]) {
+          setFormErrors((prevErrors) => ({
+              ...prevErrors,
+              [e.target.name]: "",
+          }));
+      }
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    // Simple validation example
+    if (!formValues.description.trim()) {
+        setFormErrors({ description: "Description is required" });
+        return;
+    }
+
+    console.log("Form Submitted", formValues);
+};
 
     const handleClose = () => {
         onClose();
@@ -78,7 +109,7 @@ const CreateNewProjectPopup = ({ isOpen, onClose }) => {
           <div className="fixed inset-0 flex items-right justify-end bg-white bg-opacity-25 backdrop-blur-sm">
             <div className="bg-white p-6 shadow-lg w-1/3">
               <div className="flex justify-between items-center mb-4">
-                <p className="font-bold text-2xl">New Project</p>
+                <p className="font-bold text-2xl">Create Role</p>
                 <div className={"cursor-pointer"} onClick={handleClose}>
                   <XMarkIcon className={"w-6 h-6 text-gray-500"} />
                 </div>
@@ -89,7 +120,7 @@ const CreateNewProjectPopup = ({ isOpen, onClose }) => {
               >
                 <div className="space-y-4">
                   <div className="flex-col">
-                    <p className="text-secondary-grey">Prefix</p>
+                    <p className="text-secondary-grey">Title</p>
                     <FormInput
                       type="text"
                       name="prefix"
@@ -102,30 +133,18 @@ const CreateNewProjectPopup = ({ isOpen, onClose }) => {
                     />
                   </div>
                   <div className="flex-col">
-                    <p className="text-secondary-grey">Project Name</p>
-                    <FormInput
-                      type="text"
-                      name="name"
-                      formValues={formValues}
-                      onChange={({ target: { name, value } }) =>
-                        handleFormChange(name, value)
-                      }
-                      formErrors={formErrors}
-                      showErrors={isValidationErrorsShown}
-                    />
+                    <label className='text-text-color' htmlFor=""> Description</label>
+                    <FormTextArea
+                name="description"
+                formValues={formValues}
+                formErrors={formErrors}
+                onChange={handleChange}
+                showErrors={true}
+                required
+            />
                   </div>
                   <div className="flex-col">
-                    <p className="text-secondary-grey">Project Type</p>
-                    <FormSelect
-                      name="projectType"
-                      formValues={formValues}
-                      options={getSelectOptions(projectTypes)}
-                      onChange={({ target: { name, value } }) =>
-                        handleFormChange(name, value)
-                      }
-                      formErrors={formErrors}
-                      showErrors={isValidationErrorsShown}
-                    />
+                   
                   </div>
                   {/* <div className="flex-col">
                     <p className="text-secondary-grey">Group</p>

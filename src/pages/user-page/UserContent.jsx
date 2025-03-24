@@ -3,12 +3,13 @@ import Goal from "../../components/user-tables/Goal"
 import Certification from "../../components/user-tables/Certification"
 import FacebookCard from "../../components/user-tables/FeedbackCard"
 import KPICard from "../../components/user-tables/KPIsCard"
+import Competencies from "../../components/user-tables/Competencies"
 
 const UserContent = () => {
 
     return (
-        <div className='bg-slate-100 flex'> 
-            <div style={{width:"62%"}}>
+        <div className='bg-slate-100 flex'>
+            <div style={{ width: "80%" }}>
                 <div className='pt-2'>
                     <Goal />
                 </div>
@@ -18,17 +19,21 @@ const UserContent = () => {
                 </div>
             </div>
 
-            <div>
-            <div className='p-2'>
-                <FacebookCard />
+            <div className='flex flex-col space-y-3 p-2' style={{width:"40%"}}>
+                <div className=''>
+                    <FacebookCard />
+                </div>
+
+                <div>
+                    <KPICard />
+                </div>
+
+                <div>
+                    <Competencies />
+                </div>
             </div>
 
-            <div>
-                <KPICard/>
-            </div>
-            </div>
 
-            
 
 
 

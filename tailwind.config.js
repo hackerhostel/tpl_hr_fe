@@ -6,7 +6,7 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        'primary-pink': '#EB5A84',
+        'primary-pink': '#E7530E',
         'project-name-content-pages-color': '#232633',
         'secondary-pink': '#fdd6db',
         'secondary-text-color': ' RGB(88, 88, 88)',

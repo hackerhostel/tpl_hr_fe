@@ -1,15 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { PlusCircleIcon } from "@heroicons/react/24/outline/index.js";
-import DataGrid, {
-  Column,
-  Paging,
-  Scrolling,
-  Sorting,
-} from "devextreme-react/data-grid";
+import {
+  PlusCircleIcon,
+  EllipsisVerticalIcon,
+  TrashIcon,
+  PencilSquareIcon,
+  CheckBadgeIcon,
+  XMarkIcon,
+} from "@heroicons/react/24/outline";
+import DataGrid, { Column, Paging, Scrolling, Sorting } from "devextreme-react/data-grid";
 import "./custom-styles.css";
 import { useHistory } from "react-router-dom";
 
-// Dummy function for rendering progress badges
 const statusCellRender = (data) => {
   const progressColors = {
     "Not Started": "bg-gray-300",
@@ -26,6 +27,8 @@ const statusCellRender = (data) => {
 const GoalsTable = () => {
   const history = useHistory();
   const [filteredGoals, setFilteredGoals] = useState([]);
+  const [newRow, setNewRow] = useState(null);
+  const [actionRow, setActionRow] = useState(null);
 
   const dummyGoals = [
     { id: 1, name: "Increase Sales", target: "$50,000", progress: "In Progress", comment: "Need more marketing efforts" },
@@ -38,66 +41,114 @@ const GoalsTable = () => {
     setFilteredGoals(dummyGoals);
   }, []);
 
+  const handleAddNew = () => {
+    setNewRow({ id: null, name: "", target: "", progress: "Not Started", comment: "" });
+  };
+
+  const handleSave = () => {
+    if (newRow) {
+      setFilteredGoals([...filteredGoals, { ...newRow, id: filteredGoals.length + 1 }]);
+      setNewRow(null);
+    }
+  };
+
+  const handleClose = () => {
+    setNewRow(null);
+  };
+
+  const handleActionClick = (id) => {
+    setActionRow(actionRow === id ? null : id);
+  };
+
+  const handleDelete = (id) => {
+    setFilteredGoals(filteredGoals.filter((goal) => goal.id !== id));
+  };
+
   return (
-   <div className="px-4">
-      {/* Goals Header */}
+    <div className="px-4">
       <div className="bg-white">
-        <div  className="flex items-center justify-between p-4">
-        <p className="text-secondary-grey text-lg font-medium">
-          {`Goals (${filteredGoals.length || 0})`}
-        </p>
-       <div className="flex items-center space-x-2 text-text-color">
-        <PlusCircleIcon className="w-5 text-text-color"/>
-        <span>Add New</span>
-       </div>
-      </div>
-      
-      
+        <div className="flex items-center justify-between p-4">
+          <p className="text-secondary-grey text-lg font-medium">
+            {`Goals (${filteredGoals.length || 0})`}
+          </p>
+          <div className="flex items-center space-x-2 text-text-color cursor-pointer" onClick={handleAddNew}>
+            <PlusCircleIcon className="w-5 text-text-color" />
+            <span>Add New</span>
+          </div>
+        </div>
+        <DataGrid
+          dataSource={newRow ? [...filteredGoals, newRow] : filteredGoals}
+          allowColumnReordering={true}
+          showBorders={false}
+          width="100%"
+          className="rounded-lg overflow-hidden"
+          showRowLines={true}
+          showColumnLines={false}
+        >
+          <Scrolling columnRenderingMode="virtual" />
+          <Sorting mode="multiple" />
+          <Paging enabled={true} pageSize={4} />
 
-      {/* Goals Table */}
-      <DataGrid
-        dataSource={filteredGoals}
-        allowColumnReordering={true}
-        showBorders={false}
-        width="100%"
-        className="rounded-lg overflow-hidden"
-        showRowLines={true}
-        showColumnLines={false}
-      >
-        <Scrolling columnRenderingMode="virtual" />
-        <Sorting mode="multiple" />
-        <Paging enabled={true} pageSize={4} />
-
-        <Column
-          dataField="name"
-          caption="Name"
-          width={240}
-          cellRender={(data) => (
-            <button
-              className="px-2 py-1 text-sm hover:bg-gray-50 rounded-lg text-wrap text-start"
-              onClick={() => history.push(`/goal/${data.data.id}`)}
-            >
-              {data.value}
-            </button>
-          )}
-        />
-        <Column dataField="target" caption="Target" width={100} />
-        <Column
-          dataField="progress"
-          caption="Progress"
-          width={180}
-          cellRender={statusCellRender} 
-        />
-        <Column dataField="comment" caption="Comment" className="text-left" width={100} />
-        <div className="flex justify-center mt-3 text-sm text-gray-500">
-        <button className="px-2">&lt;</button>
-        <span className="mx-2 text-primary font-bold">01</span>
-        <span className="mx-2">02</span>
-        <button className="px-2">&gt;</button>
+          <Column
+            dataField="name"
+            caption="Name"
+            width={240}
+            cellRender={(data) => (
+              data.data.id ? (
+                <button
+                  className="px-2 py-1 text-sm hover:bg-gray-50 rounded-lg text-wrap text-start"
+                  onClick={() => history.push(`/goal/${data.data.id}`)}
+                >
+                  {data.value}
+                </button>
+              ) : (
+                <input
+                  className="border p-1 w-full"
+                  value={newRow.name}
+                  onChange={(e) => setNewRow({ ...newRow, name: e.target.value })}
+                />
+              )
+            )}
+          />
+          <Column dataField="target" caption="Target" width={100} />
+          <Column dataField="progress" caption="Progress" width={180} cellRender={statusCellRender} />
+          <Column dataField="comment" caption="Comment" width={100} />
+          <Column
+            caption="Actions"
+            width={100}
+            cellRender={(data) => (
+              data.data.id ? (
+                <div className="relative">
+                  <EllipsisVerticalIcon
+                    className="w-5 cursor-pointer"
+                    onClick={() => handleActionClick(data.data.id)}
+                  />
+                  {actionRow === data.data.id && (
+                    <div className="absolute bg-white shadow-md p-2 right-0 mt-2 rounded-md z-10">
+                      <button className="flex items-center space-x-1 text-sm text-gray-700 py-1">
+                        <PencilSquareIcon className="w-4" />
+                        <span>Edit</span>
+                      </button>
+                      <button
+                        className="flex items-center space-x-1 text-sm text-red-500 py-1"
+                        onClick={() => handleDelete(data.data.id)}
+                      >
+                        <TrashIcon className="w-4" />
+                        <span>Delete</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="flex space-x-2">
+                  <CheckBadgeIcon className="w-5 text-green-500 cursor-pointer" onClick={handleSave} />
+                  <XMarkIcon className="w-5 text-red-500 cursor-pointer" onClick={handleClose} />
+                </div>
+              )
+            )}
+          />
+        </DataGrid>
       </div>
-      </DataGrid>
-      </div>
-
     </div>
   );
 };

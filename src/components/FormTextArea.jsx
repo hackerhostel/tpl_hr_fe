@@ -47,10 +47,10 @@ const FormTextArea = React.forwardRef((
                         name={name}
                         value={value}
                         className={classNames(
-                            'w-full p-4 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white',
+                            'w-full py-24 p-4 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white',
                             {
-                                'border-red-300 text-red-900 placeholder-red-300 focus:ring-red-500 focus:border-red-500': hasError,
-                                'focus:ring-blue-500 focus:border-blue-500 border-gray-300': !hasError,
+                                'border-red-300 text-red-800 placeholder-red-300 focus:ring-red-500 focus:border-red-500': hasError,
+                                'focus:ring-gray-300 focus:border-gray-300 border-gray-300': !hasError,
                             },
                             {'shadow-sm': showShadow},
                             {'mt-1': showLabel},

@@ -76,14 +76,16 @@ const Login = () => {
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className='flex flex-col md:flex-row bg-white shadow-2xl rounded-2xl m-24'>
-        {/* Left side */}
-        <div className='flex flex-col pt-24 pl-28' style={{ width: '650px', height: '727px' }}>
-          <div className='w-3/4'>
+  
+        <div  className="p-10 border border-border-color"
+          style={{width:"600px"}}>
+          <div className=''>
             <div>
-              <h3 style={{fontWeight:"bold", fontSize:"42px"}} className="mb-3">Log In</h3>
-              <span className=" font-light text-lg text-textColor">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore</span>
+            <span className=" flex text-4xl items-center justify-center font-semibold">
+                Sign In
+              </span>
             </div>
-            <form className="mt-4 space-y-6" ref={formRef} onSubmit={login}>
+            <form className="mt-10 space-y-6" ref={formRef} onSubmit={login}>
               <div className="mb-6">
                 <FormInput
                   type="text"
@@ -106,28 +108,20 @@ const Login = () => {
                   showErrors={isValidationErrorsShown}
                 />
               </div>
-              <div className='flex justify-between w-full py-4'>
-                <div className='mr-24'>
-                  <input type="checkbox" name="ch" id="ch" className="mr-1 text-mainColor" />
-                  <span className="text-md">Remember for 30 days</span>
-                </div>
+              <div className='flex justify-end  w-full py-4'>
                 <Link to="/forgot-password" className="text-md text-mainColor">Forgot password</Link>
               </div>
               <input
                 type="submit"
-                value="Login"
+                value="Sign In"
                 className="btn-login"
               />
             </form>
             <div className="text-center mt-5 text-textColor">
-              Don't have an account?
-              <span onClick={navigateToRegister} className="text-primary-pink cursor-pointer"> Register Now</span>
+              Don't have an account
+              <span onClick={navigateToRegister} className="text-primary-pink cursor-pointer"> Sign Up for free</span>
             </div>
           </div>
-        </div>
-        {/* Right side */}
-        <div className="hidden md:block" style={{ width: '520px' }}>
-          <img className='w-full h-full rounded-r-2xl object-cover' src={LoginImage} alt="Login" />
         </div>
       </div>
     </div>
