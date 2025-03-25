@@ -10,6 +10,7 @@ import {
 import DataGrid, { Column, Paging, Scrolling, Sorting } from "devextreme-react/data-grid";
 import "./custom-styles.css";
 import { useHistory } from "react-router-dom";
+import FormInput from "../FormInput"
 
 const statusCellRender = (data) => {
   const progressColors = {
@@ -29,6 +30,7 @@ const GoalsTable = () => {
   const [filteredGoals, setFilteredGoals] = useState([]);
   const [newRow, setNewRow] = useState(null);
   const [actionRow, setActionRow] = useState(null);
+  const [editingRow, setEditingRow] = useState(null);
 
   const dummyGoals = [
     { id: 1, name: "Increase Sales", target: "$50,000", progress: "In Progress", comment: "Need more marketing efforts" },
@@ -47,21 +49,32 @@ const GoalsTable = () => {
 
   const handleSave = () => {
     if (newRow) {
-      setFilteredGoals([...filteredGoals, { ...newRow, id: filteredGoals.length + 1 }]);
+      setFilteredGoals([{ ...newRow, id: filteredGoals.length + 1 }, ...filteredGoals]);
       setNewRow(null);
+    }
+    if (editingRow) {
+      setFilteredGoals(filteredGoals.map(goal => goal.id === editingRow.id ? editingRow : goal));
+      setEditingRow(null);
+      setActionRow(null);
     }
   };
 
   const handleClose = () => {
     setNewRow(null);
+    setEditingRow(null);
+    setActionRow(null);
   };
 
   const handleActionClick = (id) => {
     setActionRow(actionRow === id ? null : id);
   };
 
+  const handleEdit = (goal) => {
+    setEditingRow({ ...goal });
+  };
+
   const handleDelete = (id) => {
-    setFilteredGoals(filteredGoals.filter((goal) => goal.id !== id));
+    setFilteredGoals(filteredGoals.filter(goal => goal.id !== id));
   };
 
   return (
@@ -77,7 +90,7 @@ const GoalsTable = () => {
           </div>
         </div>
         <DataGrid
-          dataSource={newRow ? [...filteredGoals, newRow] : filteredGoals}
+          dataSource={newRow ? [newRow, ...filteredGoals] : filteredGoals}
           allowColumnReordering={true}
           showBorders={false}
           width="100%"
@@ -92,60 +105,78 @@ const GoalsTable = () => {
           <Column
             dataField="name"
             caption="Name"
-            width={240}
-            cellRender={(data) => (
-              data.data.id ? (
-                <button
-                  className="px-2 py-1 text-sm hover:bg-gray-50 rounded-lg text-wrap text-start"
-                  onClick={() => history.push(`/goal/${data.data.id}`)}
-                >
-                  {data.value}
-                </button>
-              ) : (
-                <input
+            cellRender={(data) =>
+              editingRow && editingRow.id === data.data.id ? (
+                <FormInput
                   className="border p-1 w-full"
-                  value={newRow.name}
-                  onChange={(e) => setNewRow({ ...newRow, name: e.target.value })}
+                  value={editingRow.name}
+                  onChange={(e) => setEditingRow({ ...editingRow, name: e.target.value })}
                 />
+              ) : (
+                <span>{data.value}</span>
               )
-            )}
+            }
           />
-          <Column dataField="target" caption="Target" width={100} />
-          <Column dataField="progress" caption="Progress" width={180} cellRender={statusCellRender} />
-          <Column dataField="comment" caption="Comment" width={100} />
+          <Column
+            dataField="target"
+            caption="Target"
+            cellRender={(data) =>
+              editingRow && editingRow.id === data.data.id ? (
+                <FormInput
+                  className="border p-1 w-full"
+                  value={editingRow.target}
+                  onChange={(e) => setEditingRow({ ...editingRow, target: e.target.value })}
+                />
+              ) : (
+                <span>{data.value}</span>
+              )
+            }
+          />
+          <Column
+            dataField="progress"
+            caption="Progress"
+            cellRender={(data) =>
+              editingRow && editingRow.id === data.data.id ? (
+                <FormInput
+                  className="border p-1 w-full"
+                  value={editingRow.progress}
+                  onChange={(e) => setEditingRow({ ...editingRow, progress: e.target.value })}
+                />
+              ) : (
+                statusCellRender(data)
+              )
+            }
+          />
+          <Column
+            dataField="comment"
+            caption="Comment"
+            cellRender={(data) =>
+              editingRow && editingRow.id === data.data.id ? (
+                <FormInput
+                  className=" p-1 w-full"
+                  value={editingRow.comment}
+                  onChange={(e) => setEditingRow({ ...editingRow, comment: e.target.value })}
+                />
+              ) : (
+                <span>{data.value}</span>
+              )
+            }
+          />
+
           <Column
             caption="Actions"
-            width={100}
-            cellRender={(data) => (
-              data.data.id ? (
-                <div className="relative">
-                  <EllipsisVerticalIcon
-                    className="w-5 cursor-pointer"
-                    onClick={() => handleActionClick(data.data.id)}
-                  />
-                  {actionRow === data.data.id && (
-                    <div className="absolute bg-white shadow-md p-2 right-0 mt-2 rounded-md z-10">
-                      <button className="flex items-center space-x-1 text-sm text-gray-700 py-1">
-                        <PencilSquareIcon className="w-4" />
-                        <span>Edit</span>
-                      </button>
-                      <button
-                        className="flex items-center space-x-1 text-sm text-red-500 py-1"
-                        onClick={() => handleDelete(data.data.id)}
-                      >
-                        <TrashIcon className="w-4" />
-                        <span>Delete</span>
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ) : (
+            cellRender={(data) =>
+              actionRow === data.data.id ? (
                 <div className="flex space-x-2">
+                  <PencilSquareIcon className="w-5 text-blue-500 cursor-pointer" onClick={() => handleEdit(data.data)} />
                   <CheckBadgeIcon className="w-5 text-green-500 cursor-pointer" onClick={handleSave} />
                   <XMarkIcon className="w-5 text-red-500 cursor-pointer" onClick={handleClose} />
+                  <TrashIcon className="w-5 text-red-500 cursor-pointer" onClick={() => handleDelete(data.data.id)} />
                 </div>
+              ) : (
+                <EllipsisVerticalIcon className="w-5 cursor-pointer" onClick={() => handleActionClick(data.data.id)} />
               )
-            )}
+            }
           />
         </DataGrid>
       </div>

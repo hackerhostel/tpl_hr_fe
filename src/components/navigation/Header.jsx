@@ -1,7 +1,7 @@
 import React, {Fragment, useCallback, useState} from "react";
 import {Menu, Transition} from "@headlessui/react";
 import {useDispatch, useSelector} from "react-redux";
-import {BellIcon} from "@heroicons/react/24/outline";
+import {BellIcon, UserIcon, ArrowRightStartOnRectangleIcon} from "@heroicons/react/24/outline";
 import FormSelect from "../FormSelect.jsx";
 import {doSwitchProject, selectProjectList, selectSelectedProject} from "../../state/slice/projectSlice.js";
 import {signOut} from 'aws-amplify/auth';
@@ -9,6 +9,7 @@ import {selectUser} from "../../state/slice/authSlice.js";
 import Notification from "./NotificationPopup.jsx"
 import HeaderTaskCreateComponent from "../task/create/HeaderTaskCreateComponent.jsx";
 import {Link, useHistory, useLocation} from 'react-router-dom';
+import { Dashboard } from "powerbi-client";
 
 const Header = () => {
   const dispatch = useDispatch();
@@ -32,22 +33,25 @@ const Header = () => {
     return initials;
   };
 
-   const MenuItem = ({ link, Icon }) => (
-      <Link
-        to={link}
-        className={`w-12 h-12 ${
-          location.pathname === link
-            ? 'bg-primary-pink'
-            : 'bg-gray-200 hover:bg-secondary-pink'
-        } rounded-full flex items-center justify-center transition-colors duration-200`}
+  const MenuItem = ({ link, label }) => (
+    <Link
+      to={link}
+      className={`${
+        location.pathname === link
+          ? 'text-primary-pink' // When selected, the link is styled with primary-pink
+          : '' // Default styling for unselected links
+      }`}
+    >
+      <span
+        className={`w-6 h-6 ${
+          location.pathname === link ? 'text-primary-pink' : 'text-text-color'
+        }`}
       >
-        <Icon
-          className={`w-6 h-6 ${
-            location.pathname === link ? 'text-white' : 'text-gray-700'
-          }`}
-        />
-      </Link>
-    );
+        {label} {/* Ensure `label` is being passed correctly */}
+      </span>
+    </Link>
+  );
+  
 
 
   const getProjectOptions = useCallback(() => {
@@ -64,6 +68,20 @@ const Header = () => {
   const closePopUp = () => {
     setIsOpenPopUp(false);
   }
+
+   const handleSignOut = async () => {
+      setLoading(true);
+      try {
+        await signOut({ global: true });
+        window.location.reload();
+      } finally {
+        setLoading(false);
+      }
+    };
+
+  const userProfile = () => {
+    history.push('/profile')
+  };
 
   const closeHeaderCreateTaskModal = () => setNewHeaderTaskModalOpen(false)
 
@@ -82,10 +100,10 @@ const Header = () => {
       </div>
 
       <div className="flex space-x-8 text-text-color text-lg ml-72 py-3 px-4 ">
-      <button>Dashboard</button>
-      <button>Employee</button>
-      <button>Role</button>
-      <button>Performance</button>
+      <MenuItem link="/dashboard" label="Dashboard" />
+        <MenuItem link="/profile" label="Employee" />
+        <MenuItem link="/projects" label="Role" />
+        <MenuItem label="Performance" />
       </div>
 
 
@@ -110,12 +128,125 @@ const Header = () => {
         <div className="border-l border-gray-300 h-8"></div>
 
         {/* User Avatar and Menu */}
-        <div className="h-20 flex items-center justify-center px-2 py-4">
-          <div
-              className="w-12 h-12 rounded-full bg-primary-pink flex items-center justify-center text-white text-lg font-semibold mb-1">
-            {userDetails?.organization ? (getInitials(userDetails?.organization?.name)) : "Affooh"}
-          </div>
-        </div>
+         <Menu as="div" className="relative inline-block text-left z-50">
+                        <Menu.Button
+                          className="w-12 h-12 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-pink">
+                          {userDetails.avatar ? (
+                            <img
+                              src={userDetails.avatar}
+                              alt={`${userDetails.firstName} ${userDetails.lastName}`}
+                              className="w-10 h-10 rounded-full object-cover"
+                            />
+                          ) : (
+                            <div
+                              className="w-10 h-10 rounded-full bg-primary-pink flex items-center justify-center text-white text-sm font-semibold">
+                              {userDetails.firstName?.[0]}
+                              {userDetails.lastName?.[0]}
+                            </div>
+                          )}
+                        </Menu.Button>
+                        <Transition
+                          as={Fragment}
+                          enter="transition ease-out duration-100"
+                          enterFrom="transform opacity-0 scale-95"
+                          enterTo="transform opacity-100 scale-100"
+                          leave="transition ease-in duration-75"
+                          leaveFrom="transform opacity-100 scale-100"
+                          leaveTo="transform opacity-0 scale-95"
+                        >
+                          <Menu.Items
+                            className="absolute -top-16 right-[1rem] mt-28 w-64 bg-white divide-y divide-gray-100 rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                            <div className="flex items-center gap-3 px-4 py-3">
+                              {userDetails.avatar ? (
+                                <img
+                                  src={userDetails.avatar}
+                                  alt={`${userDetails.firstName} ${userDetails.lastName}`}
+                                  className="w-10 h-10 rounded-full object-cover"
+                                />
+                              ) : (
+                                <div
+                                  className="w-10 h-10 rounded-full bg-primary-pink flex items-center justify-center text-white text-sm font-semibold inline-block">
+                                  {userDetails.firstName?.[0]}
+                                  {userDetails.lastName?.[0]}
+                                </div>
+                              )}
+                              <div className="flex flex-col">
+                                <p className="text-sm font-medium text-gray-900 truncate">
+                                  {`${userDetails.firstName} ${userDetails.lastName}`}
+                                </p>
+                                <p className="text-sm text-gray-500 truncate">
+                                  {userDetails.email}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="py-1">
+                              <Menu.Item>
+                                {({ active }) => (
+                                  <button
+                                    className={`${active
+                                        ? "bg-gray-100 text-gray-900"
+                                        : "text-gray-700"
+                                      } group flex w-full items-center px-4 py-2 text-sm transition-colors duration-150`}
+                                    onClick={userProfile}
+                                    disabled={loading}
+                                  >
+                                    <UserIcon className="w-4 h-4 mr-3 cursor-pointer" />
+                                    My Profile
+                                  </button>
+                                )}
+                              </Menu.Item>
+                              {/* <Menu.Item>
+                                    {({active}) => (
+                                        <button
+                                            className={`${
+                                                active
+                                                    ? "bg-gray-100 text-gray-900"
+                                                    : "text-gray-700"
+                                            } group flex w-full items-center px-4 py-2 text-sm transition-colors duration-150`}
+                                            onClick={handleSettingsClick}
+                                            disabled={loading}
+                                        >
+                                          <CogIcon className="w-4 h-4 mr-3 cursor-pointer"/>
+                                          Settings
+                                        </button>
+                                    )}
+                                  </Menu.Item>
+                                  <Menu.Item>
+                                    {({active}) => (
+                                        <button
+                                            className={`${
+                                                active
+                                                    ? "bg-gray-100 text-gray-900"
+                                                    : "text-gray-700"
+                                            } group flex w-full items-center px-4 py-2 text-sm transition-colors duration-150`}
+                                            onClick={handleNotificationClick}
+                                            disabled={loading}
+                                        >
+                                          <BellIcon className="w-4 h-4 mr-3 cursor-pointer"/>
+                                          Notifications
+                                        </button>
+                                    )}
+                                  </Menu.Item> */}
+                              <Menu.Item>
+                                {({ active }) => (
+                                  <button
+                                    className={`${active
+                                        ? "bg-gray-100 text-gray-900"
+                                        : "text-gray-700"
+                                      } group flex w-full items-center px-4 py-2 text-sm transition-colors duration-150`}
+                                    onClick={handleSignOut}
+                                    disabled={loading}
+                                  >
+                                    <ArrowRightStartOnRectangleIcon className="w-4 h-4 mr-3 cursor-pointer" />
+                                    Log Out
+                                  </button>
+                                )}
+                              </Menu.Item>
+                            </div>
+                          </Menu.Items>
+                        </Transition>
+                      </Menu>
+     
       </div>
       <HeaderTaskCreateComponent isOpen={newHeaderTaskModalOpen} onClose={closeHeaderCreateTaskModal}/>
     </div>

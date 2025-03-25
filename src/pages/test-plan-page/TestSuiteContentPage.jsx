@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import SkeletonLoader from "../../components/SkeletonLoader.jsx";
 import FormSelect from "../../components/FormSelect.jsx";
 import FormTextArea from "../../components/FormTextArea.jsx";
+import FormInput from "../../components/FormInput.jsx"
 
 const TestSuiteContentPage = () => {
     const [testExecutionCycles, setTestExecutionCycles] = useState([]);
@@ -56,11 +57,10 @@ const TestSuiteContentPage = () => {
         },
     ];
 
-    const testCaseStatuses = [
-        { id: 1, value: "Achieved" },
-        { id: 2, value: "Partially Achieved" },
-        { id: 3, value: "Not Achieved" },
-    ];
+
+
+    const testCaseStatuses = ["Achieved", "Partially Achieved", "Not Achieved"];
+
 
     return (
         <div className="p-2 bg-dashboard-bgc h-full">
@@ -76,24 +76,24 @@ const TestSuiteContentPage = () => {
             <div className=" text-center flex flex-col gap-4 items-center">
                 <SkeletonLoader />
             </div>
-            <div className="flex-col h-[calc(100vh-250px)] overflow-y-auto">
+            <div className="flex-col overflow-y-auto">
                 <div className="p-4 rounded-md">
                     <div className="bg-white p-4 rounded-md mb-5 h-40">
-                    <div className="flex space-x-8 mt-3">
-                                        <StatusCount count="4" label="Achieved" variant="default" />
-                                        <StatusCount count="2" label="Partially Achieved " variant="success" />
-                                        <StatusCount count="1" label="Not Achieved" variant="danger" />
+                        <div className="flex space-x-8 mt-3">
+                            <StatusCount count="4" label="Achieved" variant="default" />
+                            <StatusCount count="2" label="Partially Achieved " variant="success" />
+                            <StatusCount count="1" label="Not Achieved" variant="danger" />
 
-                                    </div>
+                        </div>
                     </div>
                     <table className="min-w-full rounded-md border-collapse bg-white">
                         <thead>
                             <tr className="h-16 text-secondary-grey">
-                                <th className="px-4 py-2 text-left">KPI</th>
-                                <th className="px-4 py-2 text-left">Target</th>
-                                <th className="px-4 py-2 text-left">Scores</th>
-                                <th className="px-4 py-2 text-center">Feedback</th>
-                                <th className="px-4 py-2 text-left">Status</th>
+                                <th className="px-4 py-2 text-left w-44">KPI</th>
+                                <th className="px-4 py-2 text-left w-44">Target</th>
+                                <th className="px-4 py-2 text-center w-44">Scores</th>
+                                <th className="px-4 py-2 text-center w-44">Feedback</th>
+                                <th className="px-4 py-2 text-center w-44">Status</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -101,28 +101,33 @@ const TestSuiteContentPage = () => {
                                 <tr key={row.id} className="border-b hover:bg-slate-100">
                                     <td className="px-4 py-2">{row.kpi}</td>
                                     <td className="px-4 py-2">{row.target}</td>
-                                    <td className="px-4 py-2">{row.scores}</td>
+                                    <td className="px-4 py-2 w-44">
+                                        <FormInput
+                                            type="text"
+                                        />
+                                    </td>
                                     <td className="px-4 py-2">
                                         <FormTextArea
                                             name="note"
                                             formValues={{ note: row.notes }}
                                             disabled={isUpdating}
                                             value={row.notes}
-                                            className="px-4 py-2 w-54 h-10 border rounded-lg"
+                                            className="px-4 py-2 w-54 h-10 border"
                                         />
                                     </td>
                                     <td className="px-4 py-2">
-                                        <select
-                                            disabled={isUpdating}
-                                            className="w-24 h-8 text-xs border border-gray-300 rounded py-1"
-                                            value={row.status}
-                                        >
-                                            {testCaseStatuses.map((option) => (
-                                                <option key={option.id} value={option.id}>
-                                                    {option.value}
-                                                </option>
-                                            ))}
-                                        </select>
+                                        <FormSelect
+                                            name="testField"
+                                            formValues={{ testField: "Achieved" }}
+                                            options={[
+                                                { label: "Achieved", value: "achieved" },
+                                                { label: "Partially Achieved", value: "partially_achieved" },
+                                                { label: "Not Achieved", value: "not_achieved" },
+                                            ]}
+                                            onChange={(e) => console.log(e.target.value)}
+                                        />
+
+
                                     </td>
                                 </tr>
                             ))}

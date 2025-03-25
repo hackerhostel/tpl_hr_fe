@@ -9,7 +9,7 @@ const UserContent = () => {
 
     return (
         <div className='bg-slate-100 flex'>
-            <div style={{ width: "80%" }}>
+            <div style={{ width: "60%" }}>
                 <div className='pt-2'>
                     <Goal />
                 </div>
