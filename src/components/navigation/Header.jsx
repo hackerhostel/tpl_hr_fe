@@ -87,23 +87,11 @@ const Header = () => {
 
   return (
     <div className="flex justify-between h-16 w-full">
-      {/* Left Section */}
-      <div className="py-3 px-4 w-72">
-        <FormSelect
-          name="project"
-          showLabel={false}
-          formValues={{ project: selectedProject?.id }}
-          placeholder="Select a project"
-          options={getProjectOptions()}
-          onChange={handleChange}
-        />
-      </div>
-
       <div className="flex space-x-8 text-text-color text-lg ml-72 py-3 px-4 ">
       <MenuItem link="/dashboard" label="Dashboard" />
         <MenuItem link="/profile" label="Employee" />
         <MenuItem link="/projects" label="Role" />
-        <MenuItem label="Performance" />
+        <MenuItem link ="/test-plans" label="Performance" />
       </div>
 
 
@@ -128,7 +116,7 @@ const Header = () => {
         <div className="border-l border-gray-300 h-8"></div>
 
         {/* User Avatar and Menu */}
-         <Menu as="div" className="relative inline-block text-left z-50">
+         <Menu as="div" className="relative inline-block text-left ">
                         <Menu.Button
                           className="w-12 h-12 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-pink">
                           {userDetails.avatar ? (

@@ -1,7 +1,7 @@
 import MainPageLayout from '../../layouts/MainPageLayout.jsx'
 import ProjectListPage from "./ProjectListPage.jsx";
 import ProjectContent from "./ProjectContent.jsx";
-import CreateNewProjectPopup from '../../components/popupForms/createNewProject.jsx';
+import CreateNewProjectPopup from '../../components/popupForms/createNewRole.jsx';
 import {useState} from "react";
 const ProjectLayout = () => {
   const [isOpen, setIsOpen] = useState(false);
