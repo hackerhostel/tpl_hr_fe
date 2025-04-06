@@ -11,39 +11,43 @@ const initialState = {
 };
 
 export const doRegisterUser = createAsyncThunk(
-  "register/doRegisterUser",
+  "/employees/register-new",
   async (userDetails, thunkApi) => {
-    const { organization, firstName, lastName, username, password } =
-      userDetails;
+    const { organization, firstName, lastName, username, password } = userDetails;
+
     try {
-      const response = await post({
-        apiName: "AffoohAPI",
-        path: "/users/register-user",
-        options: {
-          body: {
-            user: {
-              password,
-              email: username,
-              firstName,
-              lastName,
-              organizationName: organization,
-            },
-          },
-          headers: {
-            "X-Api-Key": getBuildConstant("REACT_APP_X_API_KEY"),
+      const response = await axios.post(
+        "https://ukyy97xhgi.execute-api.us-east-1.amazonaws.com/dev/employees/register-new",
+        {
+          user: {
+            email: username,
+            password,
+            firstName,
+            lastName,
+            organizationName: organization,
           },
         },
-      });
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "X-Api-Key": getBuildConstant("REACT_APP_X_API_KEY"),
+          },
+        }
+      );
 
-      if (response) {
-        return response.resolve();
+      const userID = response?.data?.body?.userID;
+
+      if (userID) {
+        return { userID };
       } else {
-        return thunkApi.rejectWithValue("Registration failed");
+        return thunkApi.rejectWithValue("Registration failed: Invalid response");
       }
     } catch (error) {
-      return thunkApi.rejectWithValue(error.message);
+      return thunkApi.rejectWithValue(
+        error?.response?.data?.message || error.message || "Registration failed"
+      );
     }
-  },
+  }
 );
 
 export const fetchUserInvitedOrganization = createAsyncThunk(
