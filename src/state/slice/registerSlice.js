@@ -10,45 +10,68 @@ const initialState = {
   error: null,
 };
 
-export const doRegisterUser = createAsyncThunk(
-  "/employees/register-new",
-  async (userDetails, thunkApi) => {
-    const { organization, firstName, lastName, username, password } = userDetails;
 
+
+export const doRegisterUser = createAsyncThunk(
+  "register/doRegisterUser",
+  async (userDetails, thunkApi) => {
+    const { organization, firstName, lastName, username, password } =
+      userDetails;
     try {
-      const response = await axios.post(
-        "https://ukyy97xhgi.execute-api.us-east-1.amazonaws.com/dev/employees/register-new",
-        {
-          user: {
-            email: username,
-            password,
-            firstName,
-            lastName,
-            organizationName: organization,
+      const response = await post({
+        apiName: "AffoohAPI",
+        path: "/users/register-user",
+        options: {
+          body: {
+            user: {
+              password,
+              email: username,
+              firstName,
+              lastName,
+              organizationName: organization,
+            },
           },
-        },
-        {
           headers: {
-            "Content-Type": "application/json",
             "X-Api-Key": getBuildConstant("REACT_APP_X_API_KEY"),
           },
-        }
-      );
+        },
+      });
 
-      const userID = response?.data?.body?.userID;
-
-      if (userID) {
-        return { userID };
+      if (response) {
+        return response.resolve();
       } else {
-        return thunkApi.rejectWithValue("Registration failed: Invalid response");
+        return thunkApi.rejectWithValue("Registration failed");
       }
     } catch (error) {
-      return thunkApi.rejectWithValue(
-        error?.response?.data?.message || error.message || "Registration failed"
-      );
+      return thunkApi.rejectWithValue(error.message);
     }
-  }
+  },
 );
+
+const registerSlice = createSlice({
+  name: "register",
+  initialState: {
+    loading: false,
+    error: null,
+  },
+  reducers: {},
+  extraReducers: (builder) => {
+    builder
+      .addCase(doRegisterUser.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(doRegisterUser.fulfilled, (state) => {
+        state.loading = false;
+      })
+      .addCase(doRegisterUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "Registration failed";
+      });
+  },
+});
+
+
 
 export const fetchUserInvitedOrganization = createAsyncThunk(
     "register/fetchUserInvitedOrganization",
@@ -115,28 +138,6 @@ export const registerInvitedUser = createAsyncThunk(
   },
 );
 
-const registerSlice = createSlice({
-  name: "register",
-  initialState,
-  reducers: {
-    clearRegisterState: () => initialState,
-  },
-  extraReducers: (builder) => {
-    builder
-      .addCase(doRegisterUser.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(doRegisterUser.fulfilled, (state, action) => {
-        state.loading = false;
-        state.user = action.payload;
-      })
-      .addCase(doRegisterUser.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      });
-  },
-});
 
 export const sendInvitation = createAsyncThunk(
   "invitations/sendInvitation",
