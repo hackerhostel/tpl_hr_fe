@@ -1,6 +1,6 @@
 import './App.css';
 import { BrowserRouter, Route, Switch } from 'react-router-dom';
-
+import ResetPassword from "./auth/ResetPassword"
 import AuthGuard from './auth/AuthGuard';
 import ForgotPassword from './auth/ForgotPassword';
 import Login from './auth/Login';
@@ -40,15 +40,14 @@ function App() {
 
         <Route path="/forgot-password">
           <PublicGuard>
-            {/* TODO: need to implement */}
             <ForgotPassword />
           </PublicGuard>
         </Route>
 
-        <Route path="/forgot-password-reset">
+        <Route path="/reset-password">
           <PublicGuard>
-            {/* TODO: need to implement */}
-            {/* <ForgotPasswordReset /> */}
+  
+  <ResetPassword/>
           </PublicGuard>
         </Route>
 

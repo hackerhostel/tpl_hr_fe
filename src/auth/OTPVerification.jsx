@@ -183,7 +183,7 @@ const OTPVerification = () => {
 
         <button
           onClick={handleContinue}
-          className="w-full bg-pink-500 text-white py-3 rounded-lg hover:bg-pink-600
+          className="w-full bg-primary-pink text-white py-3 rounded-lg
                     transition-colors mb-4 font-medium"
         >
           Continue

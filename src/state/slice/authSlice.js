@@ -11,7 +11,7 @@ const initialState = {
 
 export const doGetWhoAmI = createAsyncThunk('src/auth/doGetWhoAmI', async (_, thunkApi) => {
   try {
-    const response = await axios.get('/users/who-am-i')
+    const response = await axios.get('/employees/who-am-i')
 
     const responseData = response.data.body;
     if (response.data.body) {
