@@ -17,7 +17,7 @@ export const doRegisterUser = createAsyncThunk(
     try {
       const response = await post({
         apiName: "AffoohAPI",
-        path: "/employees/register-new", // Corrected endpoint
+        path: "/employees/register-new",
         options: {
           body: {
             user: {
@@ -117,6 +117,28 @@ export const registerInvitedUser = createAsyncThunk(
   }
 );
 
+export const sendInvitation = createAsyncThunk(
+  "register/sendInvitation",
+  async ({ email, role }, thunkApi) => {
+    try {
+      const response = await post({
+        apiName: "AffoohAPI",
+        path: "/employees/invite",
+        options: {
+          body: { email, role },
+          headers: {
+            "X-Api-Key": getBuildConstant("REACT_APP_X_API_KEY"),
+          },
+        },
+      });
+      const data = await response.response;
+      return data.body;
+    } catch (error) {
+      return thunkApi.rejectWithValue(error.message || "Invitation failed");
+    }
+  }
+);
+
 const registerSlice = createSlice({
   name: "register",
   initialState,
@@ -169,6 +191,17 @@ const registerSlice = createSlice({
         state.user = action.payload;
       })
       .addCase(registerInvitedUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(sendInvitation.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(sendInvitation.fulfilled, (state) => {
+        state.loading = false;
+      })
+      .addCase(sendInvitation.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });
