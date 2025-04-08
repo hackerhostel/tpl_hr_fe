@@ -1,8 +1,7 @@
 import './App.css';
 import { BrowserRouter, Route, Switch } from 'react-router-dom';
-
+import ForgotPassword from "./auth/ForgotPassword";
 import AuthGuard from './auth/AuthGuard';
-import ForgotPassword from './auth/ForgotPassword';
 import Login from './auth/Login';
 import OTPVerification from './auth/OTPVerification';
 import PublicGuard from './auth/PublicGuard';
@@ -40,7 +39,6 @@ function App() {
 
         <Route path="/forgot-password">
           <PublicGuard>
-            {/* TODO: need to implement */}
             <ForgotPassword />
           </PublicGuard>
         </Route>
