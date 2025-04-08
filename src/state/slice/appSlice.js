@@ -33,7 +33,7 @@ export const doGetOrganizationUsers = createAsyncThunk(
     'src/app/doGetOrganizationUsers', async (_, thunkApi) =>
     {
       try {
-        const response = await axios.get('/organizations/users')
+        const response = await axios.get('/organizations/employees')
 
         const responseData = response.data.body;
         if (responseData) {
