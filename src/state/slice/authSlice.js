@@ -1,23 +1,19 @@
-import {createAsyncThunk, createSlice} from '@reduxjs/toolkit'
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
 import axios from "axios";
-import {setProjectList, setSelectedProject} from "./projectSlice.js";
 
 const initialState = {
   appConfig: {},
-  user: {permissions: []},
+  user: { permissions: [] },
   initialDataLoading: true,
   initialDataError: false,
 }
 
 export const doGetWhoAmI = createAsyncThunk('src/auth/doGetWhoAmI', async (_, thunkApi) => {
   try {
-    const response = await axios.get('/users/who-am-i')
+    const response = await axios.get('/employees/who-am-i');
 
     const responseData = response.data.body;
-    if (response.data.body) {
-      thunkApi.dispatch(setProjectList(responseData.projects));
-      thunkApi.dispatch(setSelectedProject(responseData.projects[0]));
-
+    if (responseData) {
       return responseData.userDetails;
     } else {
       return thunkApi.rejectWithValue('User details not found');
@@ -34,24 +30,25 @@ export const authSlice = createSlice({
     clearAuthState: () => initialState,
   },
   extraReducers: (builder) => {
-    builder.addCase(doGetWhoAmI.pending, (state, action) => {
+    builder.addCase(doGetWhoAmI.pending, (state) => {
       state.initialDataLoading = true;
     });
     builder.addCase(doGetWhoAmI.fulfilled, (state, action) => {
       state.initialDataLoading = false;
       state.initialDataError = false;
-      state.user = action.payload
+      state.user = action.payload;
     });
-    builder.addCase(doGetWhoAmI.rejected, (state, action) => {
+    builder.addCase(doGetWhoAmI.rejected, (state) => {
+      state.initialDataLoading = false;
       state.initialDataError = true;
     });
   }
-})
+});
 
-export const {clearAuthState} = authSlice.actions
+export const { clearAuthState } = authSlice.actions;
 
 export const selectUser = (state) => state.auth.user;
 export const selectInitialUserDataLoading = (state) => state.auth.initialDataLoading;
 export const selectInitialUserDataError = (state) => state.auth.initialDataError;
 
-export default authSlice.reducer
+export default authSlice.reducer;

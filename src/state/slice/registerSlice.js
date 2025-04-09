@@ -1,8 +1,8 @@
-﻿import {createAsyncThunk, createSlice} from "@reduxjs/toolkit";
-import {post} from "aws-amplify/api";
-import {confirmSignUp} from "aws-amplify/auth";
+﻿import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import { post } from "aws-amplify/api";
+import { confirmSignUp } from "aws-amplify/auth";
 import axios from "axios";
-import {getBuildConstant} from "../../constants/build-constants.jsx";
+import { getBuildConstant } from "../../constants/build-constants.jsx";
 
 const initialState = {
   user: null,
@@ -18,12 +18,12 @@ export const doRegisterUser = createAsyncThunk(
     try {
       const response = await post({
         apiName: "AffoohAPI",
-        path: "/users/register-user",
+        path: "/employees/register-new", // Fixed endpoint
         options: {
           body: {
             user: {
               password,
-              email: username,
+              email: username, // Align with backend
               firstName,
               lastName,
               organizationName: organization,
@@ -35,41 +35,47 @@ export const doRegisterUser = createAsyncThunk(
         },
       });
 
-      if (response) {
-        return response.resolve();
+      const result = await response.response;
+      if (result.body) {
+        const data = await result.body.json(); // Correct response handling
+        console.log("Registration response:", data);
+        return data; // Expecting { userID }
       } else {
         return thunkApi.rejectWithValue("Registration failed");
       }
     } catch (error) {
-      return thunkApi.rejectWithValue(error.message);
+      console.error("Registration error:", error);
+      return thunkApi.rejectWithValue(
+        error.message || "Failed to register user"
+      );
     }
-  },
+  }
 );
 
 export const fetchUserInvitedOrganization = createAsyncThunk(
-    "register/fetchUserInvitedOrganization",
-    async (email, thunkApi) => {
-      try {
-        const response = await axios.get(
-            `/users/complete-registration/${email}`,
-            {
-              headers: {
-                "X-Api-Key": getBuildConstant("REACT_APP_X_API_KEY"),
-              },
-            }
-        );
-        return response?.data?.body?.inviteDetails || {};
-      } catch (error) {
-        return thunkApi.rejectWithValue(error.message || "Failed to get details");
-      }
+  "register/fetchUserInvitedOrganization",
+  async (email, thunkApi) => {
+    try {
+      const response = await axios.get(
+        `/employees/complete-registration/${email}`, // Fixed endpoint
+        {
+          headers: {
+            "X-Api-Key": getBuildConstant("REACT_APP_X_API_KEY"),
+          },
+        }
+      );
+      return response?.data?.body?.inviteDetails || {};
+    } catch (error) {
+      console.error("Fetch invited organization error:", error);
+      return thunkApi.rejectWithValue(error.message || "Failed to get details");
     }
+  }
 );
 
 export const doVerifyOTP = createAsyncThunk(
   "register/doVerifyOTP",
   async (verificationDetails, thunkApi) => {
     const { username, otp } = verificationDetails;
-
     try {
       const verificationResult = await confirmSignUp({
         username,
@@ -79,25 +85,29 @@ export const doVerifyOTP = createAsyncThunk(
       if (!verificationResult.isSignUpComplete) {
         return thunkApi.rejectWithValue("OTP verification failed");
       }
+      return verificationResult;
     } catch (error) {
-      return thunkApi.rejectWithValue(error.message);
+      console.error("OTP verification error:", error);
+      return thunkApi.rejectWithValue(
+        error.message || "OTP verification failed"
+      );
     }
-  },
+  }
 );
 
 export const registerInvitedUser = createAsyncThunk(
   "register/registerInvitedUser",
   async (registerDetails, thunkApi) => {
     try {
-      await post({
+      const response = await post({
         apiName: "AffoohAPI",
-        path: "/users/complete-registration",
+        path: "/employees/complete-registration", // Fixed endpoint
         options: {
           body: {
             user: {
               firstName: registerDetails.firstName,
               lastName: registerDetails.lastName,
-              email: registerDetails.username,
+              email: registerDetails.username, // Align with backend
             },
           },
           headers: {
@@ -105,10 +115,20 @@ export const registerInvitedUser = createAsyncThunk(
           },
         },
       });
+
+      const result = await response.response;
+      if (result.body) {
+        return await result.body.json();
+      } else {
+        return thunkApi.rejectWithValue("Failed to register invited user");
+      }
     } catch (error) {
-      return thunkApi.rejectWithValue(error.message || "Failed Register User");
+      console.error("Invited user registration error:", error);
+      return thunkApi.rejectWithValue(
+        error.message || "Failed to register user"
+      );
     }
-  },
+  }
 );
 
 const registerSlice = createSlice({
@@ -130,6 +150,41 @@ const registerSlice = createSlice({
       .addCase(doRegisterUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+      })
+      .addCase(doVerifyOTP.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(doVerifyOTP.fulfilled, (state) => {
+        state.loading = false;
+      })
+      .addCase(doVerifyOTP.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(registerInvitedUser.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(registerInvitedUser.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload;
+      })
+      .addCase(registerInvitedUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(fetchUserInvitedOrganization.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchUserInvitedOrganization.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload;
+      })
+      .addCase(fetchUserInvitedOrganization.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       });
   },
 });
@@ -144,24 +199,26 @@ export const sendInvitation = createAsyncThunk(
       });
 
       if (!response?.data?.body?.userID) {
-        return new Error("Invalid response format");
+        return thunkApi.rejectWithValue("Invalid response format");
       }
 
       return response.data.body.userID;
     } catch (error) {
+      console.error("Send invitation error:", error);
       return thunkApi.rejectWithValue(
-        error.message || "Failed to send invitation",
+        error.message || "Failed to send invitation"
       );
     }
-  },
+  }
 );
 
-// Slice for managing invitations state
 const invitationsSlice = createSlice({
   name: "invitations",
   initialState: {
     invitations: [],
     currentInvitation: null,
+    status: "idle",
+    error: null,
   },
   reducers: {
     clearInvitationError: (state) => {

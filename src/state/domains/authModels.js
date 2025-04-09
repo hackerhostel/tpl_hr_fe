@@ -6,8 +6,11 @@ export const LoginSchema = yup.object({
 });
 
 export const ForgotPasswordSchema = yup.object({
-  username: yup.string().required(),
-})
+  email: yup
+    .string()
+    .email("Invalid email format")
+    .required("Email is required"),
+});
 
 export const SprintSchema = yup.object({
   sprintName: yup.string().required('Sprint name is required'),
