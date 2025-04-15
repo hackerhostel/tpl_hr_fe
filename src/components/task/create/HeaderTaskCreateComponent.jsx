@@ -52,6 +52,9 @@ const CreateEmployee = ({ onClose, isOpen }) => {
         const fetchDesignations = async () => {
             try {
                 const res = await axios.get("/designations");
+                console.log("Designations:", fetched);
+
+
                 const fetched = res?.data?.body?.designations || [];
                 setDesignations(fetched);
             } catch (err) {
@@ -93,8 +96,8 @@ const CreateEmployee = ({ onClose, isOpen }) => {
             reportingManager: String(formValues.reportingManager).trim(),
             location: String(formValues.location).trim(),
             hiredDate: String(formValues.hiredDate).trim(),
-            userRole: String(formValues.userRole).trim(),
-            designationID: String(formValues.designationID).trim()
+            userRole: Number(formValues.userRole),
+            designationID: Number(formValues.designationID),
         };
 
 
@@ -126,12 +129,6 @@ const CreateEmployee = ({ onClose, isOpen }) => {
 
         setIsSubmitting(false);
     };
-
-    const roleOptions = [
-        { label: "Admin", value: "Admin" },
-        { label: "Employee", value: "Employee" },
-        { label: "Manager", value: "Manager" },
-    ];
 
     return (
         <>
@@ -178,10 +175,12 @@ const CreateEmployee = ({ onClose, isOpen }) => {
                                 formErrors={formErrors} showErrors={showErrors}
                             />
 
-<FormInput name="userRole" type="text" placeholder="User role"
+                            <FormInput name="userRole" type="number" placeholder="User role"
                                 formValues={formValues} onChange={handleChange}
                                 formErrors={formErrors} showErrors={showErrors}
                             />
+
+
 
                             <FormSelect
                                 name="designationID"
@@ -189,13 +188,14 @@ const CreateEmployee = ({ onClose, isOpen }) => {
                                 formValues={formValues}
                                 value={formValues.designationID}
                                 options={getSelectOptions(designations)}
-                                onChange={(value) => handleChange({ target: { name: 'designationID' } }, value)}
-
+                                onChange={(selectedOption) =>
+                                    handleChange({ target: { name: 'designationID' } }, selectedOption?.value)
+                                }
                                 formErrors={formErrors}
                                 showErrors={showErrors}
                             />
 
-                            
+
 
 
 
