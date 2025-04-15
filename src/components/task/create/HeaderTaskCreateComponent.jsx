@@ -26,13 +26,12 @@ const CreateEmployee = ({ onClose, isOpen }) => {
         location: '',
         hiredDate: '',
         userRole: '',
-        designationID: ''
+        designationID: null,
     });
+
     const handleChange = (e, customValue = null) => {
         const name = e.target?.name;
         const value = customValue ?? e.target?.value ?? '';
-        console.log(`Field: ${name}, Value: ${value}`);
-
         if (name) {
             setFormValues((prev) => ({
                 ...prev,
@@ -40,7 +39,6 @@ const CreateEmployee = ({ onClose, isOpen }) => {
             }));
         }
     };
-
 
     const getSelectOptions = (list) =>
         list.map((item) => ({
@@ -52,10 +50,8 @@ const CreateEmployee = ({ onClose, isOpen }) => {
         const fetchDesignations = async () => {
             try {
                 const res = await axios.get("/designations");
-                console.log("Designations:", fetched);
-
-
                 const fetched = res?.data?.body?.designations || [];
+                console.log("Designations:", fetched);
                 setDesignations(fetched);
             } catch (err) {
                 console.error("Error fetching designations:", err);
@@ -67,7 +63,9 @@ const CreateEmployee = ({ onClose, isOpen }) => {
     const validateForm = () => {
         const errors = {};
         Object.entries(formValues).forEach(([key, val]) => {
-            if (!val) errors[key] = `${key} is required`;
+            if (!val && val !== 0) {
+                errors[key] = `${key} is required`;
+            }
         });
 
         if (formValues.email && !/\S+@\S+\.\S+/.test(formValues.email)) {
@@ -99,8 +97,6 @@ const CreateEmployee = ({ onClose, isOpen }) => {
             userRole: Number(formValues.userRole),
             designationID: Number(formValues.designationID),
         };
-
-
 
         console.log("Submitting payload:", {
             employee: payload,
@@ -174,30 +170,29 @@ const CreateEmployee = ({ onClose, isOpen }) => {
                                 formValues={formValues} onChange={handleChange}
                                 formErrors={formErrors} showErrors={showErrors}
                             />
-
-                            <FormInput name="userRole" type="number" placeholder="User role"
+                            <FormInput name="userRole" type="number" placeholder="User Role"
                                 formValues={formValues} onChange={handleChange}
                                 formErrors={formErrors} showErrors={showErrors}
                             />
 
+                            <FormInput name="designationID" type="number" placeholder="Designation"
+                                formValues={formValues} onChange={handleChange}
+                                formErrors={formErrors} showErrors={showErrors}
+                            />
 
-
-                            <FormSelect
+                            {/* <FormSelect
                                 name="designationID"
                                 placeholder="Select Designation"
-                                formValues={formValues}
-                                value={formValues.designationID}
                                 options={getSelectOptions(designations)}
+                                value={getSelectOptions(designations).find(
+                                    (option) => option.value === Number(formValues.designationID)
+                                )}
                                 onChange={(selectedOption) =>
-                                    handleChange({ target: { name: 'designationID' } }, selectedOption?.value)
+                                    handleChange({ target: { name: 'designationID' } }, Number(selectedOption?.value))
                                 }
                                 formErrors={formErrors}
                                 showErrors={showErrors}
-                            />
-
-
-
-
+                            /> */}
 
                             <div className="flex space-x-4 mt-10 self-end w-full">
                                 <button type="button" onClick={onClose} className="btn-secondary">
