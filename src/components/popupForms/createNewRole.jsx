@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useEffect } from "react";
 import { useDispatch } from 'react-redux';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import FormInput from "../FormInput.jsx";
@@ -20,7 +21,7 @@ const CreateNewRolePopup = ({ isOpen, onClose }) => {
   const [formErrors, setFormErrors] = useState({});
   const [isValidationErrorsShown, setIsValidationErrorsShown] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+  
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -36,6 +37,9 @@ const CreateNewRolePopup = ({ isOpen, onClose }) => {
       }));
     }
   };
+
+ 
+
 
   const validateForm = () => {
     const errors = {};
