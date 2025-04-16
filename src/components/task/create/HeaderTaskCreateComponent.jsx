@@ -175,12 +175,12 @@ const CreateEmployee = ({ onClose, isOpen }) => {
                                 formErrors={formErrors} showErrors={showErrors}
                             />
 
-                            <FormInput name="designationID" type="number" placeholder="Designation"
+                            {/* <FormInput name="designationID" type="number" placeholder="Designation"
                                 formValues={formValues} onChange={handleChange}
                                 formErrors={formErrors} showErrors={showErrors}
-                            />
+                            /> */}
 
-                            {/* <FormSelect
+                            <FormSelect
                                 name="designationID"
                                 placeholder="Select Designation"
                                 options={getSelectOptions(designations)}
@@ -192,7 +192,7 @@ const CreateEmployee = ({ onClose, isOpen }) => {
                                 }
                                 formErrors={formErrors}
                                 showErrors={showErrors}
-                            /> */}
+                            />
 
                             <div className="flex space-x-4 mt-10 self-end w-full">
                                 <button type="button" onClick={onClose} className="btn-secondary">
