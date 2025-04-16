@@ -60,7 +60,8 @@ const UserListPage = () => {
   useEffect(() => {
     const fetchEmployeeDetails = async () => {
       try {
-        const response = await axios.get(`/employees/:id`);
+        const response = await axios.get(`/employees/${selectedUserId}`)
+
         console.log("Employee details:", response.data);
       } catch (error) {
         console.error("Error fetching employee details:", error);
