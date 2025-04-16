@@ -40,6 +40,8 @@ const CreateEmployee = ({ onClose, isOpen }) => {
         }
     };
 
+
+
     const getSelectOptions = (list) =>
         list.map((item) => ({
             label: item.title,
@@ -175,24 +177,28 @@ const CreateEmployee = ({ onClose, isOpen }) => {
                                 formErrors={formErrors} showErrors={showErrors}
                             />
 
-                            {/* <FormInput name="designationID" type="number" placeholder="Designation"
+                            <FormInput name="designationID" type="number" placeholder="Designation"
                                 formValues={formValues} onChange={handleChange}
                                 formErrors={formErrors} showErrors={showErrors}
-                            /> */}
-
-                            <FormSelect
+                            />
+                            {/* <FormSelect
                                 name="designationID"
                                 placeholder="Select Designation"
                                 options={getSelectOptions(designations)}
                                 value={getSelectOptions(designations).find(
                                     (option) => option.value === Number(formValues.designationID)
                                 )}
-                                onChange={(selectedOption) =>
-                                    handleChange({ target: { name: 'designationID' } }, Number(selectedOption?.value))
-                                }
+                                onChange={(selectedOption) => {
+                                    const name = "designationID";
+                                    const value = selectedOption?.value ?? '';
+                                    handleChange({ target: { name, value } });
+                                    updateTaskDetails("designationID", value); // if epicID = designationID, else update key
+                                }}
                                 formErrors={formErrors}
                                 showErrors={showErrors}
-                            />
+                            /> */}
+                           
+
 
                             <div className="flex space-x-4 mt-10 self-end w-full">
                                 <button type="button" onClick={onClose} className="btn-secondary">

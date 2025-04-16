@@ -60,8 +60,7 @@ const UserListPage = () => {
   useEffect(() => {
     const fetchEmployeeDetails = async () => {
       try {
-        const response = await axios.get(`/employees/${selectedUserId}`)
-
+        const response = await axios.get(`/organizations/employees`);
         console.log("Employee details:", response.data);
       } catch (error) {
         console.error("Error fetching employee details:", error);
@@ -72,6 +71,8 @@ const UserListPage = () => {
       fetchEmployeeDetails();
     }
   }, [selectedUserId]);
+  
+  
   
 
   const toggleEditable = () => {
