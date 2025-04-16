@@ -56,6 +56,23 @@ const UserListPage = () => {
     setSelectedUserId(Number(e.target.value));
   };
 
+
+  useEffect(() => {
+    const fetchEmployeeDetails = async () => {
+      try {
+        const response = await axios.get(`/employees/:id`);
+        console.log("Employee details:", response.data);
+      } catch (error) {
+        console.error("Error fetching employee details:", error);
+      }
+    };
+  
+    if (selectedUserId) {
+      fetchEmployeeDetails();
+    }
+  }, [selectedUserId]);
+  
+
   const toggleEditable = () => {
     setIsEditable(!isEditable);
   };
