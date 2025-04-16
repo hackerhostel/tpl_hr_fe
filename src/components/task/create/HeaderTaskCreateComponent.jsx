@@ -40,6 +40,8 @@ const CreateEmployee = ({ onClose, isOpen }) => {
         }
     };
 
+
+
     const getSelectOptions = (list) =>
         list.map((item) => ({
             label: item.title,
@@ -179,7 +181,6 @@ const CreateEmployee = ({ onClose, isOpen }) => {
                                 formValues={formValues} onChange={handleChange}
                                 formErrors={formErrors} showErrors={showErrors}
                             />
-
                             {/* <FormSelect
                                 name="designationID"
                                 placeholder="Select Designation"
@@ -187,12 +188,17 @@ const CreateEmployee = ({ onClose, isOpen }) => {
                                 value={getSelectOptions(designations).find(
                                     (option) => option.value === Number(formValues.designationID)
                                 )}
-                                onChange={(selectedOption) =>
-                                    handleChange({ target: { name: 'designationID' } }, Number(selectedOption?.value))
-                                }
+                                onChange={(selectedOption) => {
+                                    const name = "designationID";
+                                    const value = selectedOption?.value ?? '';
+                                    handleChange({ target: { name, value } });
+                                    updateTaskDetails("designationID", value); // if epicID = designationID, else update key
+                                }}
                                 formErrors={formErrors}
                                 showErrors={showErrors}
                             /> */}
+                           
+
 
                             <div className="flex space-x-4 mt-10 self-end w-full">
                                 <button type="button" onClick={onClose} className="btn-secondary">
