@@ -114,20 +114,20 @@ const UserListPage = () => {
       addToast("Please select a user to update.", { appearance: "error" });
       return;
     }
-  
+
     if (!validateForm()) {
       addToast("Please fix validation errors before submitting.", { appearance: "error" });
       return;
     }
-  
+
     try {
       const payload = {
         ...formValues,
         id: selectedUser.id,
       };
-  
+
       await axios.put(`/employees/${selectedUser.id}`, payload);
-  
+
       addToast("User updated successfully", { appearance: "success" });
       setIsEditable(false);
     } catch (error) {
@@ -135,7 +135,20 @@ const UserListPage = () => {
       addToast("Failed to update user", { appearance: "error" });
     }
   };
-  
+
+  const validateForm = () => {
+    const errors = {};
+
+    if (!formValues.firstName.trim()) errors.firstName = "First name is required";
+    if (!formValues.lastName.trim()) errors.lastName = "Last name is required";
+    if (!formValues.email.trim()) errors.email = "Email is required";
+    if (!formValues.contactNumber.trim()) errors.contactNumber = "Contact number is required";
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+
 
   if (userListForLoading) return <div className="p-2"><SkeletonLoader /></div>;
   if (userListError) return <ErrorAlert message="Failed to fetch users at the moment" />;
@@ -144,13 +157,11 @@ const UserListPage = () => {
     <div className="h-list-screen overflow-y-auto w-full pl-3">
       <div className="flex flex-col gap-3 laptopL:w-64 w-full">
         <div>
-          <label htmlFor="">Users</label>
           <FormSelect
             name="userSelect"
             options={userOptions}
             value={selectedUser?.id || ""}
             onChange={handleUserChange}
-            placeholder="Select User"
           />
         </div>
 
@@ -185,7 +196,7 @@ const UserListPage = () => {
               </div>
 
               <div className='flex gap-2 mt-5'>
-             
+
 
                 <button className="bg-primary-pink text-white rounded-md px-4 py-2" style={{ width: "185px" }}>
                   INVITE
@@ -201,8 +212,8 @@ const UserListPage = () => {
                   value={formValues.firstName}
                   onChange={handleInputChange}
                   className={`w-full p-2 border rounded-md ${isEditable ? "bg-white" : "bg-user-detail-box cursor-not-allowed"}`} disabled={!isEditable}
-                   formErrors={formErrors} 
-                   showErrors={true} showLabel={true}
+                  formErrors={formErrors}
+                  showErrors={true} showLabel={true}
                 />
 
                 <FormInput
@@ -211,8 +222,8 @@ const UserListPage = () => {
                   value={formValues.lastName}
                   onChange={handleInputChange}
                   className={`w-full p-2 border rounded-md ${isEditable ? "bg-white" : "bg-user-detail-box cursor-not-allowed"}`} disabled={!isEditable}
-                   formErrors={formErrors} 
-                   showErrors={true} showLabel={true}
+                  formErrors={formErrors}
+                  showErrors={true} showLabel={true}
                 />
 
                 <FormInput
@@ -221,8 +232,8 @@ const UserListPage = () => {
                   value={formValues.email}
                   onChange={handleInputChange}
                   className={`w-full p-2 border rounded-md ${isEditable ? "bg-white" : "bg-user-detail-box cursor-not-allowed"}`} disabled={!isEditable}
-                   formErrors={formErrors} 
-                   showErrors={true} showLabel={true}
+                  formErrors={formErrors}
+                  showErrors={true} showLabel={true}
                 />
 
                 <FormInput
@@ -231,8 +242,8 @@ const UserListPage = () => {
                   value={formValues.contactNumber}
                   onChange={handleInputChange}
                   className={`w-full p-2 border rounded-md ${isEditable ? "bg-white" : "bg-user-detail-box cursor-not-allowed"}`} disabled={!isEditable}
-                   formErrors={formErrors} 
-                   showErrors={true} showLabel={true}
+                  formErrors={formErrors}
+                  showErrors={true} showLabel={true}
                 />
 
 
@@ -242,8 +253,8 @@ const UserListPage = () => {
                   value={formValues.departmentID}
                   onChange={handleInputChange}
                   className={`w-full p-2 border rounded-md ${isEditable ? "bg-white" : "bg-user-detail-box cursor-not-allowed"}`} disabled={!isEditable}
-                   formErrors={formErrors} 
-                   showErrors={true} showLabel={true}
+                  formErrors={formErrors}
+                  showErrors={true} showLabel={true}
                 />
 
 
@@ -255,29 +266,35 @@ const UserListPage = () => {
                   value={formValues.hiredDate}
                   onChange={handleInputChange}
                   className={`w-full p-2 border rounded-md ${isEditable ? "bg-white" : "bg-user-detail-box cursor-not-allowed"}`} disabled={!isEditable}
-                   formErrors={formErrors} 
-                   showErrors={true} showLabel={true}
+                  formErrors={formErrors}
+                  showErrors={true} showLabel={true}
                 />
-                
-                
+
+
                 <FormInput
                   name="location"
                   placeholder="Location"
                   value={formValues.location}
                   onChange={handleInputChange}
                   className={`w-full p-2 border rounded-md ${isEditable ? "bg-white" : "bg-user-detail-box cursor-not-allowed"}`} disabled={!isEditable}
-                   formErrors={formErrors} 
-                   showErrors={true} showLabel={true}
+                  formErrors={formErrors}
+                  showErrors={true} showLabel={true}
                 />
 
-<FormInput
-  name="userRole"
-  placeholder="Role"
-  value={formValues.userRole}
-/>
+                <FormInput
+                  name="userRole"
+                  placeholder="Role"
+                  value={formValues.userRole}
+                  onChange={handleInputChange}
+                  className={`w-full p-2 border rounded-md ${isEditable ? "bg-white" : "bg-user-detail-box cursor-not-allowed"}`}
+                  disabled={!isEditable}
+                  formErrors={formErrors}
+                  showErrors={true}
+                  showLabel={true}
+                />
 
 
-                
+
 
                 {/* <FormSelect name="status" options={userOptions} value={selectedUser?.id || ""} onChange={handleUserChange} placeholder="Status" /> */}
 
