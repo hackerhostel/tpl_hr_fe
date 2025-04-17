@@ -42,25 +42,25 @@ const CreateEmployee = ({ onClose, isOpen }) => {
         }
     };
 
-    
+
 
 
 
     const getSelectOptions = (options) => {
         if (options && options.length) {
-          return options.map((o) => ({
-            value: Number(o?.id || o?.rID || o?.checklistID),
-            label: o?.name || o?.value || o?.title,
-          }));
+            return options.map((o) => ({
+                value: Number(o?.id || o?.rID || o?.checklistID),
+                label: o?.name || o?.value || o?.title,
+            }));
         }
         return [];
-      };
-      
-      
+    };
 
-      
-      
-      
+
+
+
+
+
 
     useEffect(() => {
         const fetchMasterData = async () => {
@@ -152,7 +152,7 @@ const CreateEmployee = ({ onClose, isOpen }) => {
             [name]: value,
         }));
     };
-    
+
 
     return (
         <>
@@ -198,47 +198,56 @@ const CreateEmployee = ({ onClose, isOpen }) => {
                                 formValues={formValues} onChange={handleChange}
                                 formErrors={formErrors} showErrors={showErrors}
                             />
+                            <FormInput name="designationID" type="text" placeholder="Designation"
+                                formValues={formValues} onChange={handleChange}
+                                formErrors={formErrors} showErrors={showErrors}
+                            />
 
-<FormSelect
-    name="designationID"
-    placeholder="Select Designation"
-    options={getSelectOptions(designations)}
-    value={
-        getSelectOptions(designations).find(
-            (option) => option.value === Number(formValues.designationID)
-        ) || null
-    }
-    onChange={({ target: { name, value } }) => {
-        handleFormChange(name, value);
-        // If needed, you can also call an update function like updateTaskDetails
-    }}
-    getOptionValue={(option) => option.value}
-    getOptionLabel={(option) => option.label}
-    formErrors={formErrors}
-    showErrors={showErrors}
-/>
+                            <FormInput name="userRole" type="text" placeholder="Role"
+                                formValues={formValues} onChange={handleChange}
+                                formErrors={formErrors} showErrors={showErrors}
+                            />
+
+                            {/* <FormSelect
+                                name="designationID"
+                                placeholder="Select Designation"
+                                options={getSelectOptions(designations)}
+                                value={
+                                    getSelectOptions(designations).find(
+                                        (option) => option.value === Number(formValues.designationID)
+                                    ) || null
+                                }
+                                onChange={({ target: { name, value } }) => {
+                                    handleFormChange(name, value);
+                                    // If needed, you can also call an update function like updateTaskDetails
+                                }}
+                                getOptionValue={(option) => option.value}
+                                getOptionLabel={(option) => option.label}
+                                formErrors={formErrors}
+                                showErrors={showErrors}
+                            />
 
 
-<FormSelect
-  name="userRole"
-  placeholder="Select User Role"
-  options={getSelectOptions(userRoles)}
-  value={
-    getSelectOptions(userRoles).find(
-      (option) => option.value === Number(formValues.userRole)
-    ) || null
-  }
-  onChange={(selectedOption) =>
-    handleChange({
-      target: {
-        name: 'userRole',
-        value: selectedOption?.value ?? '',
-      },
-    })
-  }
-  formErrors={formErrors}
-  showErrors={showErrors}
-/>
+                            <FormSelect
+                                name="userRole"
+                                placeholder="Select User Role"
+                                options={getSelectOptions(userRoles)}
+                                value={
+                                    getSelectOptions(userRoles).find(
+                                        (option) => option.value === Number(formValues.userRole)
+                                    ) || null
+                                }
+                                onChange={(selectedOption) =>
+                                    handleChange({
+                                        target: {
+                                            name: 'userRole',
+                                            value: selectedOption?.value ?? '',
+                                        },
+                                    })
+                                }
+                                formErrors={formErrors}
+                                showErrors={showErrors}
+                            /> */}
 
 
 

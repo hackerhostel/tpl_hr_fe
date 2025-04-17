@@ -44,7 +44,7 @@ const UserListPage = () => {
     reportingManager: "",
     location: "",
     hiredDate: "",
-    userRole: "",
+    userRoleID: "",
   });
 
   useEffect(() => {
@@ -93,7 +93,7 @@ const UserListPage = () => {
       location: selectedUser?.location || '',
       hiredDate: selectedUser?.hiredDate || '',
       contactNumber: selectedUser?.contactNumber || '',
-      userRole: selectedUser?.userRole || '',
+      userRoleID: selectedUser?.userRoleID || '',
     });
   }, [selectedUser]);
 
@@ -124,6 +124,7 @@ const UserListPage = () => {
       const payload = {
         ...formValues,
         id: selectedUser.id,
+        userRole: formValues.userRole,
       };
 
       await axios.put(`/employees/${selectedUser.id}`, payload);
@@ -196,7 +197,15 @@ const UserListPage = () => {
               </div>
 
               <div className='flex gap-2 mt-5'>
-
+                <select
+                  value={selectedRole}
+                  onChange={(e) => setSelectedRole(e.target.value)}
+                  className="border border-gray-300 rounded-md  w-full"
+                >
+                  {roles?.map((r) => (
+                    <option key={r.id} value={r.id}>{r.value}</option>
+                  ))}
+                </select>
 
                 <button className="bg-primary-pink text-white rounded-md px-4 py-2" style={{ width: "185px" }}>
                   INVITE
@@ -282,9 +291,9 @@ const UserListPage = () => {
                 />
 
                 <FormInput
-                  name="userRole"
+                  name="userRoleID"
                   placeholder="Role"
-                  value={formValues.userRole}
+                  value={formValues.userRoleID}
                   onChange={handleInputChange}
                   className={`w-full p-2 border rounded-md ${isEditable ? "bg-white" : "bg-user-detail-box cursor-not-allowed"}`}
                   disabled={!isEditable}
