@@ -60,6 +60,21 @@ const UserListPage = () => {
   useEffect(() => {
     const fetchEmployeeDetails = async () => {
       try {
+        const response = await axios.get(`/organizations/master-data`);
+        console.log("master data:", response.data);
+      } catch (error) {
+        console.error("Error fetching employee details:", error);
+      }
+    };
+  
+    if (selectedUserId) {
+      fetchEmployeeDetails();
+    }
+  }, [selectedUserId]);
+
+  useEffect(() => {
+    const fetchEmployeeDetails = async () => {
+      try {
         const response = await axios.get(`/organizations/employees`);
         console.log("Employee details:", response.data);
       } catch (error) {
@@ -71,6 +86,9 @@ const UserListPage = () => {
       fetchEmployeeDetails();
     }
   }, [selectedUserId]);
+
+
+  
   
   
   
