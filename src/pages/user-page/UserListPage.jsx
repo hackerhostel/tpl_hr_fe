@@ -27,7 +27,6 @@ const UserListPage = () => {
   const selectedProject = useSelector(selectSelectedProject);
 
   const [filteredUserList, setFilteredUserList] = useState([]);
-  const [inviteEmail, setInviteEmail] = useState("");
   const [roles, setRoles] = useState([]);
   const [selectedRole, setSelectedRole] = useState(1);
   const [isEditable, setIsEditable] = useState(false);
@@ -36,8 +35,20 @@ const UserListPage = () => {
   const [employeeList, setEmployeeList] = useState([]);
   const [userOptions, setUserOptions] = useState([]);
 
+  const [formValues, setFormValues] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    contactNumber: "",
+    departmentID: "",
+    reportingManager: "",
+    location: "",
+    hiredDate: "",
+    userRole: "",
+  });
+
   useEffect(() => {
-    if (userListForOrg && userListForOrg.length) {
+    if (userListForOrg?.length) {
       setFilteredUserList(userListForOrg);
     } else {
       setFilteredUserList([]);
@@ -72,26 +83,6 @@ const UserListPage = () => {
     dispatch(setClickedUser(user));
   };
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormValues((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-
-  const toggleEditable = () => {
-    setIsEditable(!isEditable);
-  };
-
-  const [formValues, setFormValues] = useState({
-    email: "",
-    contactNumber: "",
-    teamID: "",
-    userRole: "",
-  });
-
   useEffect(() => {
     setFormValues({
       firstName: selectedUser?.firstName || '',
@@ -105,6 +96,46 @@ const UserListPage = () => {
       userRole: selectedUser?.userRole || '',
     });
   }, [selectedUser]);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormValues((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const toggleEditable = () => {
+    setIsEditable(!isEditable);
+  };
+
+  const handleUpdateUser = async () => {
+    if (!selectedUser?.id) {
+      addToast("Please select a user to update.", { appearance: "error" });
+      return;
+    }
+  
+    if (!validateForm()) {
+      addToast("Please fix validation errors before submitting.", { appearance: "error" });
+      return;
+    }
+  
+    try {
+      const payload = {
+        ...formValues,
+        id: selectedUser.id,
+      };
+  
+      await axios.put(`/employees/${selectedUser.id}`, payload);
+  
+      addToast("User updated successfully", { appearance: "success" });
+      setIsEditable(false);
+    } catch (error) {
+      console.error("Error updating user:", error);
+      addToast("Failed to update user", { appearance: "error" });
+    }
+  };
+  
 
   if (userListForLoading) return <div className="p-2"><SkeletonLoader /></div>;
   if (userListError) return <ErrorAlert message="Failed to fetch users at the moment" />;
@@ -154,15 +185,7 @@ const UserListPage = () => {
               </div>
 
               <div className='flex gap-2 mt-5'>
-                <select
-                  value={selectedRole}
-                  onChange={(e) => setSelectedRole(e.target.value)}
-                  className="border border-gray-300 rounded-md w-full"
-                >
-                  {roles?.map((r) => (
-                    <option key={r.id} value={r.id}>{r.value}</option>
-                  ))}
-                </select>
+             
 
                 <button className="bg-primary-pink text-white rounded-md px-4 py-2" style={{ width: "185px" }}>
                   INVITE
@@ -247,9 +270,18 @@ const UserListPage = () => {
                    showErrors={true} showLabel={true}
                 />
 
-                <FormSelect name="status" options={userOptions} value={selectedUser?.id || ""} onChange={handleUserChange} placeholder="Status" />
+<FormInput
+  name="userRole"
+  placeholder="Role"
+  value={formValues.userRole}
+/>
 
-                <button type="submit" className="px-4 py-2 bg-primary-pink w-full text-white rounded-md">
+
+                
+
+                {/* <FormSelect name="status" options={userOptions} value={selectedUser?.id || ""} onChange={handleUserChange} placeholder="Status" /> */}
+
+                <button type="submit" onClick={handleUpdateUser} className="px-4 py-2 bg-primary-pink w-full text-white rounded-md">
                   Update
                 </button>
               </div>
