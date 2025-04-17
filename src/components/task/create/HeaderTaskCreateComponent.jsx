@@ -15,6 +15,8 @@ const CreateEmployee = ({ onClose, isOpen }) => {
     const [designations, setDesignations] = useState([]);
     const [formErrors, setFormErrors] = useState({});
     const [showErrors, setShowErrors] = useState(false);
+    const [userRoles, setUserRoles] = useState([]);
+
 
     const [formValues, setFormValues] = useState({
         firstName: '',
@@ -42,25 +44,39 @@ const CreateEmployee = ({ onClose, isOpen }) => {
 
 
 
-    const getSelectOptions = (list) =>
-        list.map((item) => ({
-            label: item.title,
-            value: item.id,
-        }));
+
+
+    const getSelectOptions = (options) => {
+        if (options && options.length) {
+            return options.map((o) => ({
+                value: Number(o?.id || o?.rID || o?.checklistID),
+                label: o?.name || o?.value || o?.title,
+            }));
+        }
+        return [];
+    };
+
+
+
+
+
+
 
     useEffect(() => {
-        const fetchDesignations = async () => {
+        const fetchMasterData = async () => {
             try {
-                const res = await axios.get("/designations");
-                const fetched = res?.data?.body?.designations || [];
-                console.log("Designations:", fetched);
-                setDesignations(fetched);
+                const res = await axios.get("/organizations/master-data");
+                const { designations, userRoles, departments, employeeStatuses } = res.data;
+                console.log("Master Data:", res.data);
+                setDesignations(designations);
+                setUserRoles(userRoles)
             } catch (err) {
-                console.error("Error fetching designations:", err);
+                console.error("Error fetching master data:", err);
             }
         };
-        fetchDesignations();
+        fetchMasterData();
     }, []);
+
 
     const validateForm = () => {
         const errors = {};
@@ -99,6 +115,9 @@ const CreateEmployee = ({ onClose, isOpen }) => {
             designationID: Number(formValues.designationID),
         };
 
+        console.log('formValues', formValues);
+
+
         console.log("Submitting payload:", {
             employee: payload,
             createdByMail: user?.email
@@ -126,6 +145,14 @@ const CreateEmployee = ({ onClose, isOpen }) => {
 
         setIsSubmitting(false);
     };
+
+    const handleFormChange = (name, value) => {
+        setFormValues((prev) => ({
+            ...prev,
+            [name]: value,
+        }));
+    };
+
 
     return (
         <>
@@ -171,15 +198,60 @@ const CreateEmployee = ({ onClose, isOpen }) => {
                                 formValues={formValues} onChange={handleChange}
                                 formErrors={formErrors} showErrors={showErrors}
                             />
-                            <FormInput name="userRole" type="number" placeholder="User Role"
+                            <FormInput name="designationID" type="text" placeholder="Designation"
                                 formValues={formValues} onChange={handleChange}
                                 formErrors={formErrors} showErrors={showErrors}
                             />
 
-                            <FormInput name="designationID" type="number" placeholder="Designation"
+                            <FormInput name="userRole" type="text" placeholder="Role"
                                 formValues={formValues} onChange={handleChange}
                                 formErrors={formErrors} showErrors={showErrors}
                             />
+
+                            {/* <FormSelect
+                                name="designationID"
+                                placeholder="Select Designation"
+                                options={getSelectOptions(designations)}
+                                value={
+                                    getSelectOptions(designations).find(
+                                        (option) => option.value === Number(formValues.designationID)
+                                    ) || null
+                                }
+                                onChange={({ target: { name, value } }) => {
+                                    handleFormChange(name, value);
+                                    // If needed, you can also call an update function like updateTaskDetails
+                                }}
+                                getOptionValue={(option) => option.value}
+                                getOptionLabel={(option) => option.label}
+                                formErrors={formErrors}
+                                showErrors={showErrors}
+                            />
+
+
+                            <FormSelect
+                                name="userRole"
+                                placeholder="Select User Role"
+                                options={getSelectOptions(userRoles)}
+                                value={
+                                    getSelectOptions(userRoles).find(
+                                        (option) => option.value === Number(formValues.userRole)
+                                    ) || null
+                                }
+                                onChange={(selectedOption) =>
+                                    handleChange({
+                                        target: {
+                                            name: 'userRole',
+                                            value: selectedOption?.value ?? '',
+                                        },
+                                    })
+                                }
+                                formErrors={formErrors}
+                                showErrors={showErrors}
+                            /> */}
+
+
+
+
                             {/* <FormSelect
                                 name="designationID"
                                 placeholder="Select Designation"
@@ -196,7 +268,7 @@ const CreateEmployee = ({ onClose, isOpen }) => {
                                 formErrors={formErrors}
                                 showErrors={showErrors}
                             /> */}
-                           
+
 
 
                             <div className="flex space-x-4 mt-10 self-end w-full">

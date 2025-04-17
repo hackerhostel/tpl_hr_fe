@@ -5,116 +5,154 @@ import FormSelect from "../../components/FormSelect.jsx";
 import FormInput from "../../components/FormInput.jsx";
 import { selectSelectedProject } from "../../state/slice/projectSlice.js";
 import ErrorAlert from "../../components/ErrorAlert.jsx";
-import { ChevronRightIcon, TrashIcon } from "@heroicons/react/24/outline/index.js";
+import { ChevronRightIcon, TrashIcon, PencilIcon } from "@heroicons/react/24/outline";
 import { doGetProjectUsers, setClickedUser } from "../../state/slice/projectUsersSlice.js";
 import { sendInvitation } from "../../state/slice/registerSlice.js";
 import { useToasts } from "react-toast-notifications";
 import axios from "axios";
 import ConfirmationDialog from "../../components/ConfirmationDialog.jsx";
-import { PencilIcon } from '@heroicons/react/24/outline/index.js';
-import { selectInitialDataError, selectInitialDataLoading, selectOrganizationUsers } from "../../state/slice/appSlice.js";
+import {
+  selectInitialDataError,
+  selectInitialDataLoading,
+  selectOrganizationUsers
+} from "../../state/slice/appSlice.js";
 
 const UserListPage = () => {
   const dispatch = useDispatch();
   const { addToast } = useToasts();
+
   const userListError = useSelector(selectInitialDataError);
   const userListForLoading = useSelector(selectInitialDataLoading);
   const userListForOrg = useSelector(selectOrganizationUsers);
   const selectedProject = useSelector(selectSelectedProject);
 
   const [filteredUserList, setFilteredUserList] = useState([]);
-  const [inviteEmail, setInviteEmail] = useState("");
   const [roles, setRoles] = useState([]);
   const [selectedRole, setSelectedRole] = useState(1);
-
   const [isEditable, setIsEditable] = useState(false);
   const [formErrors, setFormErrors] = useState({});
-  const [selectedUserId, setSelectedUserId] = useState(1); // Default user is Alice (ID = 1)
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [employeeList, setEmployeeList] = useState([]);
+  const [userOptions, setUserOptions] = useState([]);
+
+  const [formValues, setFormValues] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    contactNumber: "",
+    departmentID: "",
+    reportingManager: "",
+    location: "",
+    hiredDate: "",
+    userRoleID: "",
+  });
 
   useEffect(() => {
-    if (userListForOrg && userListForOrg.length) {
+    if (userListForOrg?.length) {
       setFilteredUserList(userListForOrg);
     } else {
       setFilteredUserList([]);
     }
   }, [userListForOrg]);
 
-  const dummyUsers = [
-    { id: 1, firstName: "Alice", lastName: "Johnson", email: "alice@example.com", avatar: "" },
-    { id: 2, firstName: "Bob", lastName: "Smith", email: "bob@example.com", avatar: "" },
-    { id: 3, firstName: "Charlie", lastName: "Brown", email: "charlie@example.com", avatar: "" }
-  ];
-
-  const selectedUser = dummyUsers.find(user => user.id === selectedUserId);
-
-  const userOptions = dummyUsers.map(user => ({
-    value: user.id,
-    label: `${user.firstName} ${user.lastName}`
-  }));
-
-  const handleUserChange = (e) => {
-    setSelectedUserId(Number(e.target.value));
-  };
-
-
   useEffect(() => {
-    const fetchEmployeeDetails = async () => {
-      try {
-        const response = await axios.get(`/organizations/master-data`);
-        console.log("master data:", response.data);
-      } catch (error) {
-        console.error("Error fetching employee details:", error);
-      }
-    };
-  
-    if (selectedUserId) {
-      fetchEmployeeDetails();
-    }
-  }, [selectedUserId]);
-
-  useEffect(() => {
-    const fetchEmployeeDetails = async () => {
+    const fetchEmployees = async () => {
       try {
         const response = await axios.get(`/organizations/employees`);
-        console.log("Employee details:", response.data);
+        const employees = response.data.body;
+        setEmployeeList(employees);
+
+        const options = employees.map((emp) => ({
+          label: `${emp.firstName} ${emp.lastName}`,
+          value: emp.id,
+        }));
+
+        setUserOptions(options);
       } catch (error) {
-        console.error("Error fetching employee details:", error);
+        console.error("Error fetching employees:", error);
       }
     };
-  
-    if (selectedUserId) {
-      fetchEmployeeDetails();
-    }
-  }, [selectedUserId]);
 
+    fetchEmployees();
+  }, []);
 
-  
-  
-  
-  
+  const handleUserChange = (e) => {
+    const selectedId = Number(e.target.value);
+    const user = employeeList.find((emp) => emp.id === selectedId);
+    setSelectedUser(user);
+    dispatch(setClickedUser(user));
+  };
+
+  useEffect(() => {
+    setFormValues({
+      firstName: selectedUser?.firstName || '',
+      lastName: selectedUser?.lastName || '',
+      email: selectedUser?.email || '',
+      departmentID: selectedUser?.departmentID || '',
+      reportingManager: selectedUser?.reportingManager || '',
+      location: selectedUser?.location || '',
+      hiredDate: selectedUser?.hiredDate || '',
+      contactNumber: selectedUser?.contactNumber || '',
+      userRoleID: selectedUser?.userRoleID || '',
+    });
+  }, [selectedUser]);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormValues((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
 
   const toggleEditable = () => {
     setIsEditable(!isEditable);
   };
 
-  const [formValues, setFormValues] = useState({
-    email: selectedUser?.email,
-    contactNumber: selectedUser?.contactNumber,
-    teamID: selectedUser?.teamID,
-    userRole: selectedUser?.userRole,
-  });
+  const handleUpdateUser = async () => {
+    if (!selectedUser?.id) {
+      addToast("Please select a user to update.", { appearance: "error" });
+      return;
+    }
 
-  useEffect(() => {
-    setFormValues({
-      email: selectedUser?.email,
-      contactNumber: selectedUser?.contactNumber,
-      teamID: selectedUser?.teamID,
-      userRole: selectedUser?.userRole,
-    });
-  }, [selectedUser]);
+    if (!validateForm()) {
+      addToast("Please fix validation errors before submitting.", { appearance: "error" });
+      return;
+    }
+
+    try {
+      const payload = {
+        ...formValues,
+        id: selectedUser.id,
+        userRole: formValues.userRole,
+      };
+
+      await axios.put(`/employees/${selectedUser.id}`, payload);
+
+      addToast("User updated successfully", { appearance: "success" });
+      setIsEditable(false);
+    } catch (error) {
+      console.error("Error updating user:", error);
+      addToast("Failed to update user", { appearance: "error" });
+    }
+  };
+
+  const validateForm = () => {
+    const errors = {};
+
+    if (!formValues.firstName.trim()) errors.firstName = "First name is required";
+    if (!formValues.lastName.trim()) errors.lastName = "Last name is required";
+    if (!formValues.email.trim()) errors.email = "Email is required";
+    if (!formValues.contactNumber.trim()) errors.contactNumber = "Contact number is required";
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+
 
   if (userListForLoading) return <div className="p-2"><SkeletonLoader /></div>;
-  if (userListError) return <ErrorAlert message="failed to fetch users at the moment" />;
+  if (userListError) return <ErrorAlert message="Failed to fetch users at the moment" />;
 
   return (
     <div className="h-list-screen overflow-y-auto w-full pl-3">
@@ -123,7 +161,7 @@ const UserListPage = () => {
           <FormSelect
             name="userSelect"
             options={userOptions}
-            value={selectedUserId}
+            value={selectedUser?.id || ""}
             onChange={handleUserChange}
           />
         </div>
@@ -145,13 +183,15 @@ const UserListPage = () => {
                     />
                   ) : (
                     <div className="w-20 h-20 rounded-full bg-primary-pink flex items-center justify-center text-white text-sm font-semibold">
-                      {selectedUser.firstName[0]}
-                      {selectedUser.lastName[0]}
+                      {selectedUser.firstName?.[0]}{selectedUser.lastName?.[0]}
                     </div>
                   )}
                 </div>
               )}
-              <span className="text-xl font-semibold mt-5 text-secondary-grey mb-1">{selectedUser?.firstName} {selectedUser?.lastName}</span>
+
+              <span className="text-xl font-semibold mt-5 text-secondary-grey mb-1">
+                {selectedUser?.firstName} {selectedUser?.lastName}
+              </span>
               <div className='bg-task-status-qa px-2 mt-1 rounded-md'>
                 <span className="text-xs">Admin</span>
               </div>
@@ -167,10 +207,7 @@ const UserListPage = () => {
                   ))}
                 </select>
 
-                <button
-                  className="bg-primary-pink text-white rounded-md px-4 py-2"
-                  style={{ width: "185px" }}
-                >
+                <button className="bg-primary-pink text-white rounded-md px-4 py-2" style={{ width: "185px" }}>
                   INVITE
                 </button>
               </div>
@@ -178,134 +215,105 @@ const UserListPage = () => {
               <hr className="w-full mt-6 border-t border-gray-200" />
 
               <div className="w-full space-y-4 mt-6">
-
                 <FormInput
                   name="firstName"
-                  formValues={formValues}
                   placeholder="First Name"
-                  className={`w-full p-2 border rounded-md ${isEditable
-                    ? "bg-white text-secondary-grey border-border-color"
-                    : "bg-user-detail-box text-secondary-grey border-border-color cursor-not-allowed"
-                    }`}
-                  disabled={!isEditable}
+                  value={formValues.firstName}
+                  onChange={handleInputChange}
+                  className={`w-full p-2 border rounded-md ${isEditable ? "bg-white" : "bg-user-detail-box cursor-not-allowed"}`} disabled={!isEditable}
                   formErrors={formErrors}
-                  showErrors={true}
-                  showLabel={true}
+                  showErrors={true} showLabel={true}
                 />
 
-
                 <FormInput
-                  name="secondName"
-                  formValues={formValues}
-                  placeholder="Second Name"
-                  className={`w-full p-2 border rounded-md ${isEditable
-                    ? "bg-white text-secondary-grey border-border-color"
-                    : "bg-user-detail-box text-secondary-grey border-border-color cursor-not-allowed"
-                    }`}
-                  disabled={!isEditable}
+                  name="lastName"
+                  placeholder="Last Name"
+                  value={formValues.lastName}
+                  onChange={handleInputChange}
+                  className={`w-full p-2 border rounded-md ${isEditable ? "bg-white" : "bg-user-detail-box cursor-not-allowed"}`} disabled={!isEditable}
                   formErrors={formErrors}
-                  showErrors={true}
-                  showLabel={true}
+                  showErrors={true} showLabel={true}
                 />
 
                 <FormInput
                   name="email"
-                  formValues={formValues}
                   placeholder="Email"
-                  className={`w-full p-2 border rounded-md ${isEditable
-                    ? "bg-white text-secondary-grey border-border-color"
-                    : "bg-user-detail-box text-secondary-grey border-border-color cursor-not-allowed"
-                    }`}
-                  disabled={!isEditable}
+                  value={formValues.email}
+                  onChange={handleInputChange}
+                  className={`w-full p-2 border rounded-md ${isEditable ? "bg-white" : "bg-user-detail-box cursor-not-allowed"}`} disabled={!isEditable}
                   formErrors={formErrors}
-                  showErrors={true}
-                  showLabel={true}
+                  showErrors={true} showLabel={true}
                 />
 
                 <FormInput
-                  name="phone"
-                  formValues={formValues}
+                  name="contactNumber"
                   placeholder="Phone"
-                  className={`w-full p-2 border rounded-md ${isEditable
-                    ? "bg-white text-secondary-grey border-border-color"
-                    : "bg-user-detail-box text-secondary-grey border-border-color cursor-not-allowed"
-                    }`}
-                  disabled={!isEditable}
+                  value={formValues.contactNumber}
+                  onChange={handleInputChange}
+                  className={`w-full p-2 border rounded-md ${isEditable ? "bg-white" : "bg-user-detail-box cursor-not-allowed"}`} disabled={!isEditable}
                   formErrors={formErrors}
-                  showErrors={true}
-                  showLabel={true}
+                  showErrors={true} showLabel={true}
                 />
-
-                <FormSelect
-                  name="userSelect"
-                  options={userOptions}
-                  value={selectedUserId}
-                  onChange={handleUserChange}
-                  placeholder="Department"
-                />
-
-                <FormSelect
-                  name="userSelect"
-                  options={userOptions}
-                  value={selectedUserId}
-                  onChange={handleUserChange}
-                  placeholder="Reported To"
-                />
-
-
 
 
                 <FormInput
-                  name="hireDate"
-                  formValues={formValues}
-                  placeholder="Hire Date"
-                  className={`w-full p-2 border rounded-md ${isEditable
-                    ? "bg-white text-secondary-grey border-border-color"
-                    : "bg-user-detail-box text-secondary-grey border-border-color cursor-not-allowed"
-                    }`}
-                  disabled={!isEditable}
+                  name="departmentID"
+                  placeholder="Department"
+                  value={formValues.departmentID}
+                  onChange={handleInputChange}
+                  className={`w-full p-2 border rounded-md ${isEditable ? "bg-white" : "bg-user-detail-box cursor-not-allowed"}`} disabled={!isEditable}
                   formErrors={formErrors}
-                  showErrors={true}
-                  showLabel={true}
+                  showErrors={true} showLabel={true}
                 />
 
+
+                <FormSelect name="reportedTo" options={userOptions} value={selectedUser?.id || ""} onChange={handleUserChange} placeholder="Reported To" />
+
+                <FormInput
+                  name="hiredDate"
+                  placeholder="Hired Date"
+                  value={formValues.hiredDate}
+                  onChange={handleInputChange}
+                  className={`w-full p-2 border rounded-md ${isEditable ? "bg-white" : "bg-user-detail-box cursor-not-allowed"}`} disabled={!isEditable}
+                  formErrors={formErrors}
+                  showErrors={true} showLabel={true}
+                />
 
 
                 <FormInput
                   name="location"
-                  formValues={formValues}
                   placeholder="Location"
-                  className={`w-full p-2 border rounded-md ${isEditable
-                    ? "bg-white text-secondary-grey border-border-color"
-                    : "bg-user-detail-box text-secondary-grey border-border-color cursor-not-allowed"
-                    }`}
+                  value={formValues.location}
+                  onChange={handleInputChange}
+                  className={`w-full p-2 border rounded-md ${isEditable ? "bg-white" : "bg-user-detail-box cursor-not-allowed"}`} disabled={!isEditable}
+                  formErrors={formErrors}
+                  showErrors={true} showLabel={true}
+                />
+
+                <FormInput
+                  name="userRoleID"
+                  placeholder="Role"
+                  value={formValues.userRoleID}
+                  onChange={handleInputChange}
+                  className={`w-full p-2 border rounded-md ${isEditable ? "bg-white" : "bg-user-detail-box cursor-not-allowed"}`}
                   disabled={!isEditable}
                   formErrors={formErrors}
                   showErrors={true}
                   showLabel={true}
                 />
 
-                <FormSelect
-                  name="userSelect"
-                  options={userOptions}
-                  value={selectedUserId}
-                  onChange={handleUserChange}
-                  placeholder="Status"
-                />
 
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-primary-pink w-full text-white rounded-md"
-                >
+
+
+                {/* <FormSelect name="status" options={userOptions} value={selectedUser?.id || ""} onChange={handleUserChange} placeholder="Status" /> */}
+
+                <button type="submit" onClick={handleUpdateUser} className="px-4 py-2 bg-primary-pink w-full text-white rounded-md">
                   Update
                 </button>
               </div>
             </div>
           </div>
         </div>
-
-
-
       </div>
     </div>
   );
