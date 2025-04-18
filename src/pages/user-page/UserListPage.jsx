@@ -44,7 +44,7 @@ const UserListPage = () => {
     reportingManager: "",
     location: "",
     hiredDate: "",
-    userRoleID: "",
+    userRole: "",
   });
 
   useEffect(() => {
@@ -88,12 +88,11 @@ const UserListPage = () => {
       firstName: selectedUser?.firstName || '',
       lastName: selectedUser?.lastName || '',
       email: selectedUser?.email || '',
-      departmentID: selectedUser?.departmentID || '',
       reportingManager: selectedUser?.reportingManager || '',
       location: selectedUser?.location || '',
       hiredDate: selectedUser?.hiredDate || '',
       contactNumber: selectedUser?.contactNumber || '',
-      userRoleID: selectedUser?.userRoleID || '',
+      userRole: selectedUser?.userRole || '',
     });
   }, [selectedUser]);
 
@@ -291,9 +290,9 @@ const UserListPage = () => {
                 />
 
                 <FormInput
-                  name="userRoleID"
+                  name="userRole"
                   placeholder="Role"
-                  value={formValues.userRoleID}
+                  value={formValues.userRole}
                   onChange={handleInputChange}
                   className={`w-full p-2 border rounded-md ${isEditable ? "bg-white" : "bg-user-detail-box cursor-not-allowed"}`}
                   disabled={!isEditable}
