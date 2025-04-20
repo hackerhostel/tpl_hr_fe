@@ -1,187 +1,246 @@
 import React, { useEffect, useState } from "react";
 import {
-  PlusCircleIcon,
-  EllipsisVerticalIcon,
-  TrashIcon,
-  PencilSquareIcon,
-  CheckBadgeIcon,
-  XMarkIcon,
+    CheckBadgeIcon,
+    PlusCircleIcon,
+    XMarkIcon,
+    PencilIcon,
+    TrashIcon,
+    ChevronLeftIcon,
+    ChevronRightIcon
 } from "@heroicons/react/24/outline";
-import DataGrid, { Column, Paging, Scrolling, Sorting } from "devextreme-react/data-grid";
-import "./custom-styles.css";
-import { useHistory } from "react-router-dom";
-import FormInput from "../FormInput"
+import FormInput from "../FormInput";
+import { useToasts } from "react-toast-notifications";
+import axios from "axios";
 
-const statusCellRender = (data) => {
-  const progressColors = {
-    "Not Started": "bg-gray-300",
-    "In Progress": "bg-blue-500",
-    "Completed": "bg-green-500",
+const GoalsSection = ({ goals = [], refetchGoals }) => {
+    const { addToast } = useToasts();
+
+    const [goalList, setGoalList] = useState(goals);
+    const [addingNew, setAddingNew] = useState(false);
+    const [newGoal, setNewGoal] = useState({ name: "", targetDate: "", progress: "", comments: "" });
+    const [editingGoalId, setEditingGoalId] = useState(null);
+    const [editGoalData, setEditGoalData] = useState({});
+
+    const [currentPage, setCurrentPage] = useState(1);
+    const rowsPerPage = 5;
+
+    useEffect(() => {
+      const isDifferent = JSON.stringify(goals) !== JSON.stringify(goalList);
+      if (isDifferent) {
+          setGoalList(goals);
+      }
+  }, [goals]);
+  
+
+    const totalPages = Math.ceil(goalList.length / rowsPerPage);
+    const indexOfLast = currentPage * rowsPerPage;
+    const indexOfFirst = indexOfLast - rowsPerPage;
+    const currentPageContent = goalList.slice(indexOfFirst, indexOfLast);
+
+    const handleInputChange = (e, isEdit = false) => {
+        const { name, value } = e.target;
+        if (isEdit) {
+            setEditGoalData({ ...editGoalData, [name]: value });
+        } else {
+            setNewGoal({ ...newGoal, [name]: value });
+        }
+    };
+
+    const handleAddGoal = async () => {
+      if (!newGoal.name || !newGoal.targetDate) {
+          addToast("Name and Target Date are required", { appearance: "warning" });
+          return;
+      }
+  
+      try {
+          // Step 1: Get current employee info
+          const whoamiRes = await axios.get("/employees/who-am-i");
+          const employeeID = whoamiRes?.data?.body?.userDetails?.id;
+          const email = whoamiRes?.data?.body?.userDetails?.email;
+  
+          console.log("Retrieved email:", email);
+  
+          if (!employeeID || !email) {
+              addToast("Failed to retrieve employee details", { appearance: "error" });
+              return;
+          }
+  
+          // Step 2: Prepare and send goal creation
+          const payload = {
+              goal: {
+                  name: newGoal.name,
+                  targetDate: newGoal.targetDate,
+                  comments: newGoal.comments,
+                  statusID: parseInt(newGoal.progress) || 1,
+                  employeeID: employeeID,
+              },
+              createdBy: email
+          };
+  
+          console.log("Payload to be sent:", payload);
+  
+          const response = await axios.post(`/employees/${employeeID}/goals`, payload);
+  
+          if (response?.data?.goalID) {
+              addToast("Goal added successfully", { appearance: "success" });
+              refetchGoals();
+              setAddingNew(false);
+              setNewGoal({ name: "", targetDate: "", progress: "", comments: "" });
+          } else {
+              throw new Error("Goal ID not returned");
+          }
+      } catch (err) {
+          console.error(err);
+          addToast("Failed to add goal", { appearance: "error" });
+      }
   };
-  return (
-    <span className={`px-2 py-1 text-white rounded ${progressColors[data.value] || "bg-gray-500"}`}>
-      {data.value}
-    </span>
-  );
-};
+  
+  
+  
 
-const GoalsTable = () => {
-  const history = useHistory();
-  const [filteredGoals, setFilteredGoals] = useState([]);
-  const [newRow, setNewRow] = useState(null);
-  const [actionRow, setActionRow] = useState(null);
-  const [editingRow, setEditingRow] = useState(null);
-
-  const dummyGoals = [
-    { id: 1, name: "Increase Sales", target: "$50,000", progress: "In Progress", comment: "Need more marketing efforts" },
-    { id: 2, name: "Launch New Product", target: "Q3 2025", progress: "Not Started", comment: "Awaiting final prototype" },
-    { id: 3, name: "Improve Customer Satisfaction", target: "90%", progress: "Completed", comment: "Achieved through better support" },
-    { id: 4, name: "Expand to New Market", target: "Europe", progress: "In Progress", comment: "Research phase ongoing" },
-  ];
-
-  useEffect(() => {
-    setFilteredGoals(dummyGoals);
-  }, []);
-
-  const handleAddNew = () => {
-    setNewRow({ id: null, name: "", target: "", progress: "Not Started", comment: "" });
-  };
-
-  const handleSave = () => {
-    if (newRow) {
-      setFilteredGoals([{ ...newRow, id: filteredGoals.length + 1 }, ...filteredGoals]);
-      setNewRow(null);
-    }
-    if (editingRow) {
-      setFilteredGoals(filteredGoals.map(goal => goal.id === editingRow.id ? editingRow : goal));
-      setEditingRow(null);
-      setActionRow(null);
-    }
-  };
-
-  const handleClose = () => {
-    setNewRow(null);
-    setEditingRow(null);
-    setActionRow(null);
-  };
-
-  const handleActionClick = (id) => {
-    setActionRow(actionRow === id ? null : id);
-  };
-
-  const handleEdit = (goal) => {
-    setEditingRow({ ...goal });
-  };
-
-  const handleDelete = (id) => {
-    setFilteredGoals(filteredGoals.filter(goal => goal.id !== id));
-  };
-
-  return (
-    <div className="px-4">
-      <div className="bg-white">
-        <div className="flex items-center justify-between p-4">
-          <p className="text-secondary-grey text-lg font-medium">
-            {`Goals (${filteredGoals.length || 0})`}
-          </p>
-          <div className="flex items-center space-x-2 text-text-color cursor-pointer" onClick={handleAddNew}>
-            <PlusCircleIcon className="w-5 text-text-color" />
-            <span>Add New</span>
-          </div>
-        </div>
-        <DataGrid
-          dataSource={newRow ? [newRow, ...filteredGoals] : filteredGoals}
-          allowColumnReordering={true}
-          showBorders={false}
-          width="100%"
-          className="rounded-lg overflow-hidden"
-          showRowLines={true}
-          showColumnLines={false}
-        >
-          <Scrolling columnRenderingMode="virtual" />
-          <Sorting mode="multiple" />
-          <Paging enabled={true} pageSize={4} />
-
-          <Column
-            dataField="name"
-            caption="Name"
-            cellRender={(data) =>
-              editingRow && editingRow.id === data.data.id ? (
-                <FormInput
-                  className="border p-1 w-full"
-                  value={editingRow.name}
-                  onChange={(e) => setEditingRow({ ...editingRow, name: e.target.value })}
-                />
-              ) : (
-                <span>{data.value}</span>
-              )
+    const handleEditGoal = async (goalId) => {
+        try {
+            const response = await axios.put(`/goals/${goalId}`, editGoalData); // Replace with actual API
+            if (response?.data?.success) {
+                addToast("Goal updated successfully", { appearance: "success" });
+                refetchGoals();
+                setEditingGoalId(null);
             }
-          />
-          <Column
-            dataField="target"
-            caption="Target"
-            cellRender={(data) =>
-              editingRow && editingRow.id === data.data.id ? (
-                <FormInput
-                  className="border p-1 w-full"
-                  value={editingRow.target}
-                  onChange={(e) => setEditingRow({ ...editingRow, target: e.target.value })}
-                />
-              ) : (
-                <span>{data.value}</span>
-              )
-            }
-          />
-          <Column
-            dataField="progress"
-            caption="Progress"
-            cellRender={(data) =>
-              editingRow && editingRow.id === data.data.id ? (
-                <FormInput
-                  className="border p-1 w-full"
-                  value={editingRow.progress}
-                  onChange={(e) => setEditingRow({ ...editingRow, progress: e.target.value })}
-                />
-              ) : (
-                statusCellRender(data)
-              )
-            }
-          />
-          <Column
-            dataField="comment"
-            caption="Comment"
-            cellRender={(data) =>
-              editingRow && editingRow.id === data.data.id ? (
-                <FormInput
-                  className=" p-1 w-full"
-                  value={editingRow.comment}
-                  onChange={(e) => setEditingRow({ ...editingRow, comment: e.target.value })}
-                />
-              ) : (
-                <span>{data.value}</span>
-              )
-            }
-          />
+        } catch (err) {
+            addToast("Failed to update goal", { appearance: "error" });
+        }
+    };
 
-          <Column
-            caption="Actions"
-            cellRender={(data) =>
-              actionRow === data.data.id ? (
-                <div className="flex space-x-2">
-                  <PencilSquareIcon className="w-5 text-blue-500 cursor-pointer" onClick={() => handleEdit(data.data)} />
-                  <CheckBadgeIcon className="w-5 text-green-500 cursor-pointer" onClick={handleSave} />
-                  <XMarkIcon className="w-5 text-red-500 cursor-pointer" onClick={handleClose} />
-                  <TrashIcon className="w-5 text-red-500 cursor-pointer" onClick={() => handleDelete(data.data.id)} />
+    const handleDeleteGoal = async (goalId) => {
+        try {
+            const response = await axios.delete(`/goals/${goalId}`); // Replace with actual API
+            if (response?.data?.success) {
+                addToast("Goal deleted successfully", { appearance: "success" });
+                refetchGoals();
+            }
+        } catch (err) {
+            addToast("Failed to delete goal", { appearance: "error" });
+        }
+    };
+
+    return (
+        <div className="w-full mt-8 px-6 py-4 bg-white rounded-md">
+            <div className="flex justify-between mb-4">
+                <span className="text-lg text-text-color">Goals</span>
+                {!addingNew && (
+                       <div className="flex items-center space-x-2 text-text-color cursor-pointer" onClick={() => setAddingNew(true)}>
+                       <PlusCircleIcon className="w-5 text-text-color" />
+                       <span>Add New</span>
+                     </div>
+                )}
+            </div>
+            <table className="table-auto w-full border-collapse">
+                <thead>
+                    <tr className="text-left text-secondary-grey border-b border-gray-200">
+                        <th className="py-3 px-4">Name</th>
+                        <th className="py-3 px-4">Target Date</th>
+                        <th className="py-3 px-4">Progress</th>
+                        <th className="py-3 px-4">Comments</th>
+                        <th className="py-3 px-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {addingNew && (
+                        <tr className="border-b border-gray-200">
+                            {["name", "targetDate", "progress", "comments"].map((field) => (
+                                <td className="px-4 py-3" key={field}>
+                                    <FormInput
+                                        type={field === "targetDate" ? "date" : "text"}
+                                        name={field}
+                                        formValues={{ [field]: newGoal[field] }}
+                                        onChange={(e) => handleInputChange(e)}
+                                    />
+                                </td>
+                            ))}
+                            <td className="px-4 py-3 flex gap-3">
+                                <CheckBadgeIcon onClick={handleAddGoal} className="w-5 h-5 text-green-600 cursor-pointer" />
+                                <XMarkIcon
+                                    onClick={() => {
+                                        setAddingNew(false);
+                                        setNewGoal({ name: "", targetDate: "", progress: "", comments: "" });
+                                    }}
+                                    className="w-5 h-5 text-red-600 cursor-pointer"
+                                />
+                            </td>
+                        </tr>
+                    )}
+                    {currentPageContent.map((goal) => (
+                        <tr className="border-b border-gray-200" key={goal.id}>
+                            {editingGoalId === goal.id ? (
+                                <>
+                                    {["name", "targetDate", "progress", "comments"].map((field) => (
+                                        <td className="px-4 py-3" key={field}>
+                                            <FormInput
+                                                type={field === "targetDate" ? "date" : "text"}
+                                                name={field}
+                                                formValues={{ [field]: editGoalData[field] }}
+                                                onChange={(e) => handleInputChange(e, true)}
+                                            />
+                                        </td>
+                                    ))}
+                                    <td className="px-4 py-3 flex gap-3">
+                                        <CheckBadgeIcon
+                                            onClick={() => handleEditGoal(goal.id)}
+                                            className="w-5 h-5 text-green-600 cursor-pointer"
+                                        />
+                                        <XMarkIcon
+                                            onClick={() => setEditingGoalId(null)}
+                                            className="w-5 h-5 text-red-600 cursor-pointer"
+                                        />
+                                    </td>
+                                </>
+                            ) : (
+                                <>
+                                    <td className="px-4 py-3">{goal.name}</td>
+                                    <td className="px-4 py-3">{goal.targetDate}</td>
+                                    <td className="px-4 py-3">{goal.progress}</td>
+                                    <td className="px-4 py-3">{goal.comments}</td>
+                                    <td className="px-4 py-3 flex gap-3">
+                                        <PencilIcon
+                                            onClick={() => {
+                                                setEditingGoalId(goal.id);
+                                                setEditGoalData(goal);
+                                            }}
+                                            className="w-5 h-5 text-blue-600 cursor-pointer"
+                                        />
+                                        <TrashIcon
+                                            onClick={() => handleDeleteGoal(goal.id)}
+                                            className="w-5 h-5 text-red-600 cursor-pointer"
+                                        />
+                                    </td>
+                                </>
+                            )}
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+
+            {goalList.length > rowsPerPage && (
+                <div className="w-full flex gap-5 items-center justify-end mt-4">
+                    <button
+                        onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                        className={`p-2 rounded-full bg-gray-200 ${currentPage === 1 ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-300"}`}
+                        disabled={currentPage === 1}
+                    >
+                        <ChevronLeftIcon className="w-4 h-4 text-secondary-grey" />
+                    </button>
+                    <span className="text-gray-500 text-center">Page {currentPage} of {totalPages}</span>
+                    <button
+                        onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                        className={`p-2 rounded-full bg-gray-200 ${currentPage === totalPages ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-300"}`}
+                        disabled={currentPage === totalPages}
+                    >
+                        <ChevronRightIcon className="w-4 h-4 text-secondary-grey" />
+                    </button>
                 </div>
-              ) : (
-                <EllipsisVerticalIcon className="w-5 cursor-pointer" onClick={() => handleActionClick(data.data.id)} />
-              )
-            }
-          />
-        </DataGrid>
-      </div>
-    </div>
-  );
+            )}
+        </div>
+    );
 };
 
-export default GoalsTable;
+export default GoalsSection;
