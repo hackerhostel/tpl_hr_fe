@@ -4,20 +4,38 @@ import WYSIWYGInput from "../../components/WYSIWYGInput";
 import {CheckBadgeIcon, PlusCircleIcon, TrashIcon, XMarkIcon} from "@heroicons/react/24/outline";
 import DataGrid, {Column, Paging, Scrolling, Sorting} from "devextreme-react/data-grid";
 import "./custom-styles.css";
-import {selectSelectedRole} from "../../state/slice/roleSlice.js";
-import {useSelector} from "react-redux";
+import {doGetRoles, selectSelectedRole} from "../../state/slice/roleSlice.js";
+import {useDispatch, useSelector} from "react-redux";
+import axios from 'axios';
+import {useToasts} from "react-toast-notifications";
 
 const RoleContent = () => {
     const selectedRole = useSelector(selectSelectedRole)
+    const {addToast} = useToasts();
+    const dispatch = useDispatch();
+
     const [role, setRole] = useState({});
+    const [formValues, setFormValues] = useState({
+        title: '',
+        description: '',
+        responsibilities: ''
+    });
+    const [description, setDescription] = useState('');
+    const [responsibilities, setResponsibilities] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
         if (selectedRole?.id) {
             setRole(selectedRole)
-            console.log("selected", selectedRole)
+            setFormValues({
+                title: selectedRole?.title,
+                description: selectedRole?.description,
+                responsibilities: selectedRole?.responsibilities
+            })
+            setDescription(selectedRole?.description)
+            setResponsibilities(selectedRole?.responsibilities)
         }
     }, [selectedRole]);
-
 
     // KPIs State
     const [filteredKPIs, setFilteredKPIs] = useState([]);
@@ -125,27 +143,76 @@ const RoleContent = () => {
         setMenuOpenId(null);
     };
 
+    const updateRole = async (event) => {
+        setIsSubmitting(true)
+        event.preventDefault();
+        try {
+            formValues.description = description
+            formValues.responsibilities = responsibilities
+            const response = await axios.put(`/designations/${role?.id}`, {designation: formValues})
+            const updated = response?.status
+
+            if (updated) {
+                addToast('Role Successfully Updated', {appearance: 'success'});
+                dispatch(doGetRoles());
+            } else {
+                addToast('Failed To Update The Role', {appearance: 'error'});
+            }
+        } catch (error) {
+            console.log(error)
+            addToast('Failed To Update The Role', {appearance: 'error'});
+        }
+        setIsSubmitting(false)
+    }
+
+    const handleFormChange = (name, value, isText) => {
+        setFormValues({...formValues, [name]: isText ? value : Number(value)});
+    };
+
+    const handleWYSIWYG = (name, value) => {
+        if (name === 'description') {
+            setDescription(value)
+        } else {
+            setResponsibilities(value)
+        }
+    };
+
     return (
         role?.id ? (
             <div style={{width: "99%"}} className="p-2 flex flex-col space-y-8 bg-slate-100">
-                <div>
-                    <FormInput type="text" name="title" placeholder="Title"/>
-                </div>
-
-                <div>
-                    <label className="text-text-color" htmlFor="">Description</label>
-                    <div className="border border-gray-300 bg-white rounded-md mt-4 p-2">
-                        <WYSIWYGInput initialValue={{description: ""}} name={"description"}/>
+                <form className="p-2 flex flex-col space-y-8" onSubmit={updateRole}>
+                    <div>
+                        <FormInput
+                            placeholder="Title"
+                            type="text"
+                            name="title"
+                            formValues={formValues}
+                            onChange={({target: {name, value}}) => handleFormChange(name, value, true)}
+                        />
                     </div>
-                </div>
 
-                <div>
-                    <label className="text-text-color" htmlFor="">Responsibilities</label>
-                    <div className="border border-gray-300 rounded-md bg-white mt-4 p-2">
-                        <WYSIWYGInput initialValue={{description: ""}} name={"description"}/>
+                    <div>
+                        <label className="text-text-color" htmlFor="">Description</label>
+                        <div className="border border-gray-300 bg-white rounded-md mt-4 p-2">
+                            <WYSIWYGInput initialValue={role?.description}
+                                          value={description}
+                                          name={"description"} onchange={handleWYSIWYG}/>
+                        </div>
                     </div>
-                </div>
 
+                    <div>
+                        <label className="text-text-color" htmlFor="">Responsibilities</label>
+                        <div className="border border-gray-300 rounded-md bg-white mt-4 p-2">
+                            <WYSIWYGInput initialValue={role?.responsibilities}
+                                          value={responsibilities}
+                                          name={"responsibilities"} onchange={handleWYSIWYG}/>
+                        </div>
+                    </div>
+                    <button type="submit"
+                            className="px-8 py-2 mt-2 bg-primary-pink text-white rounded cursor-pointer disabled:bg-gray-400 disabled:cursor-not-allowed w-40 self-end"
+                            disabled={isSubmitting}>Update
+                    </button>
+                </form>
 
                 {/* KPIs Table */}
                 <div className="bg-white">
@@ -179,7 +246,8 @@ const RoleContent = () => {
                         <Column caption="Actions" width={100} cellRender={(data) => (
                             newRow?.data.id === data.data.id ? (
                                 <div className="flex space-x-2">
-                                    <button onClick={handleSaveNew}><CheckBadgeIcon className="w-5 h-5 text-green-500"/>
+                                    <button onClick={handleSaveNew}><CheckBadgeIcon
+                                        className="w-5 h-5 text-green-500"/>
                                     </button>
                                     <button onClick={handleCancelNew}><XMarkIcon className="w-5 h-5 text-red-500"/>
                                     </button>
@@ -208,7 +276,8 @@ const RoleContent = () => {
 
                     <DataGrid
                         dataSource={[...filteredCompetencies, ...(newRow?.table === "Competencies" ? [newRow.data] : [])]}
-                        allowColumnReordering showBorders={false} width="100%" className="rounded-lg overflow-hidden">
+                        allowColumnReordering showBorders={false} width="100%"
+                        className="rounded-lg overflow-hidden">
                         <Scrolling columnRenderingMode="virtual"/>
                         <Sorting mode="multiple"/>
                         <Paging enabled pageSize={4}/>

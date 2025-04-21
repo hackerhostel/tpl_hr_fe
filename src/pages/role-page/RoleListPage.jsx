@@ -1,33 +1,29 @@
 import React, {useEffect, useState} from 'react';
 import {ChevronRightIcon} from "@heroicons/react/24/outline/index.js";
-import axios from 'axios';
 import ConfirmationDialog from "../../components/ConfirmationDialog.jsx";
-import {useDispatch} from "react-redux";
-import {setSelectedRole} from "../../state/slice/roleSlice.js";
+import {useDispatch, useSelector} from "react-redux";
+import {doGetRoles, selectIsRolesLoading, selectRoles, setSelectedRole} from "../../state/slice/roleSlice.js";
 
 const RoleListPage = () => {
   const dispatch = useDispatch();
+  const roleList = useSelector(selectRoles);
+  const loading = useSelector(selectIsRolesLoading);
 
   const [roles, setRoles] = useState([]);
-  const [role, setRole] = useState(null);
+  const [role, setRole] = useState({});
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
-
-  const fetchRoles = async () => {
-    try {
-      const response = await axios.get('/designations');
-      console.log('Fetched role list:', response.data);
-      setRoles(response.data?.body?.designations || []);
-    } catch (error) {
-      console.error('Failed to fetch roles:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   useEffect(() => {
-    fetchRoles();
-  }, []);
+    if (!roles.length) {
+      dispatch(doGetRoles());
+    }
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (roleList.length) {
+      setRoles(roleList)
+    }
+  }, [roleList]);
 
   const handleDeleteClick = (role) => {
     setRole(role);
