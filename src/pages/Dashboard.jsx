@@ -1,6 +1,6 @@
 import {Redirect, Route, Switch} from "react-router-dom";
 import Header from "../components/navigation/Header.jsx";
-import ProjectLayout from "./project-page/index.jsx";
+import ProjectLayout from "./role-page/index.jsx";
 import UserLayout from "./user-page/index.jsx";
 import {useDispatch, useSelector} from "react-redux";
 import React, {useEffect} from "react";
