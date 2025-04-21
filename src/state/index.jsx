@@ -1,4 +1,3 @@
-
 import registerReducer from './slice/registerSlice.js';
 import {configureStore} from '@reduxjs/toolkit'
 import appReducer from './slice/appSlice.js'
@@ -11,6 +10,7 @@ import projectUsersReducer from "./slice/projectUsersSlice.js";
 import releaseReducer from "./slice/releaseSlice.js";
 import platformReducer from "./slice/platformSlice.js";
 import testCaseReducer from "./slice/testCaseSlice.js";
+import roleReducer from "./slice/roleSlice.js";
 
 export const store = configureStore({
   reducer: {
@@ -24,6 +24,7 @@ export const store = configureStore({
     projectUsers: projectUsersReducer,
     release: releaseReducer,
     platform: platformReducer,
-    testCase: testCaseReducer
+    testCase: testCaseReducer,
+    role: roleReducer
   },
 });
