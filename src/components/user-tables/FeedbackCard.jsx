@@ -1,31 +1,48 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { PlusCircleIcon, StarIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import FormInput from "../FormInput"; // Assuming you have a FormInput component
-import FormTextArea from "../FormTextArea"; // Assuming you have a FormTextArea component
+import FormInput from "../FormInput";
+import FormTextArea from "../FormTextArea";
+import axios from "axios";
 
-const feedbackData = [
-  {
-    id: 1,
-    name: "Nilanga",
-    role: "Manager",
-    date: "12-12-24",
-    rating: 4.5,
-    feedback:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua...",
-  },
-  {
-    id: 2,
-    name: "John Doe",
-    role: "Senior Developer",
-    date: "10-10-24",
-    rating: 5,
-    feedback: "A great experience! The team was very helpful and professional...",
-  },
-];
-
-const FeedbackPopup = ({ isOpen, onClose }) => {
-
+const FeedbackPopup = ({ isOpen, onClose, onAddFeedback }) => {
   const [relationship, setRelationship] = useState("");
+  const [comments, setComments] = useState("");
+  const [rating, setRating] = useState(0);
+
+  const handleAddFeedback = async () => {
+    try {
+      const whoamiRes = await axios.get("/employees/who-am-i");
+      const employeeID = whoamiRes?.data?.body?.userDetails?.id;
+
+      const payload = {
+        feedbackTypeID: relationship,
+        comments,
+        rating,
+        employeeID,
+      };
+
+      const res = await axios.post(`/employees/${employeeID}/feedback`, {
+        feedback: payload,
+      });
+
+      if (res.status === 201) {
+        onAddFeedback({
+          id: res.data.feedbackID,
+          name: whoamiRes?.data?.body?.userDetails?.name || "Anonymous",
+          role: "Your Role", // If role is returned, you can update this
+          date: new Date().toLocaleDateString(),
+          rating,
+          feedback: comments,
+        });
+        onClose();
+        setRelationship("");
+        setComments("");
+        setRating(0);
+      }
+    } catch (error) {
+      console.error("Error submitting feedback:", error);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -38,44 +55,83 @@ const FeedbackPopup = ({ isOpen, onClose }) => {
         <span className="text-lg font-semibold text-text-color">Add Feedback</span>
 
         <div className="flex items-center space-x-5">
+          <div className="mt-3">
+            <label className="text-sm font-medium text-gray-600">Relationship</label>
+            <FormInput
+              name="feedbackTypeID"
+              label="Feedback Type"
+              value={relationship}
+              onChange={(e) => setRelationship(e.target.value)}
+            />
+          </div>
+
+          <div className="mt-3">
+            <label className="text-sm font-medium text-gray-600">Rate</label>
+            <div className="flex mt-1">
+              {[...Array(5)].map((_, index) => (
+                <StarIcon
+                  key={index}
+                  className={`w-6 cursor-pointer ${index < rating ? "text-yellow-500" : "text-gray-300"}`}
+                  onClick={() => setRating(index + 1)}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+
         <div className="mt-3">
-          <label className="text-sm font-medium text-gray-600">Relationship</label>
-          <FormInput
-            label="Relationship"
-            value={relationship}
-            onChange={(e) => setRelationship(e.target.value)}
+          <label className="text-sm font-medium text-gray-600">Comment</label>
+          <FormTextArea
+            className="w-full mt-1"
+            rows="3"
+            name="comments"
+            value={comments}
+            onChange={(e) => setComments(e.target.value)}
           />
         </div>
 
-        <div className="mt-3">
-          <label className="text-sm font-medium text-gray-600">Rate</label>
-          <div className="flex mt-1">
-            {[...Array(5)].map((_, index) => (
-              <StarIcon key={index} className="text-yellow-500 w-6" />
-            ))}
-          </div>
-        </div>
-        </div>
-
-        
-
-        <div className="mt-3">
-        <label className="text-sm font-medium text-gray-600">Role</label>
-          <FormTextArea className="w-full mt-1" rows="3"  name="role" />
-
-
-        </div>
-
-        <button className="mt-4 bg-orange-500 text-white w-full py-2 rounded">Add</button>
+        <button
+          className="mt-4 bg-orange-500 text-white w-full py-2 rounded"
+          onClick={handleAddFeedback}
+        >
+          Add
+        </button>
       </div>
     </div>
   );
 };
 
 const FeedbackCard = () => {
+  const [feedbackData, setFeedbackData] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
-  const feedback = feedbackData[currentIndex];
+
+  // Mock: Load initial feedback (could be replaced with actual API call)
+  useEffect(() => {
+    setFeedbackData([
+      {
+        id: 1,
+        name: "Nilanga",
+        role: "Manager",
+        date: "12-12-24",
+        rating: 4.5,
+        feedback: "Lorem ipsum dolor sit amet, consectetur adipiscing elit...",
+      },
+      {
+        id: 2,
+        name: "John Doe",
+        role: "Senior Developer",
+        date: "10-10-24",
+        rating: 5,
+        feedback: "A great experience! The team was very helpful and professional...",
+      },
+    ]);
+  }, []);
+
+  const handleAddFeedback = (newFeedback) => {
+    setFeedbackData((prev) => [...prev, newFeedback]);
+    setCurrentIndex(feedbackData.length); // Navigate to the new feedback
+  };
 
   const handleNext = () => {
     if (currentIndex < feedbackData.length - 1) {
@@ -89,12 +145,14 @@ const FeedbackCard = () => {
     }
   };
 
+  const feedback = feedbackData[currentIndex];
+
   return (
     <div style={{ width: "100%" }} className="bg-white rounded-md p-5">
       {/* Header */}
       <div className="flex justify-between items-center border-b pb-2">
         <span className="text-lg font-semibold text-gray-800">
-          Feedback ({currentIndex + 1} / {feedbackData.length})
+          Feedback ({feedbackData.length ? currentIndex + 1 : 0} / {feedbackData.length})
         </span>
         <button onClick={() => setIsPopupOpen(true)} className="flex items-center space-x-2 text-text-color">
           <PlusCircleIcon className="w-5 text-text-color" />
@@ -102,63 +160,72 @@ const FeedbackCard = () => {
         </button>
       </div>
 
-      {/* User Info */}
-      <div className="mt-3">
-        <div className="flex justify-between">
-          <span className="font-medium text-gray-800">{feedback.name}</span>
-          <div className="flex items-center">
-            <span className="bg-purple-200 text-purple-800 text-xs font-semibold px-2 py-1 rounded">
-              {feedback.role}
-            </span>
-            <span className="ml-3 text-gray-500 text-sm">{feedback.date}</span>
+      {feedback && (
+        <>
+          {/* User Info */}
+          <div className="mt-3">
+            <div className="flex justify-between">
+              <span className="font-medium text-gray-800">{feedback.name}</span>
+              <div className="flex items-center">
+                <span className="bg-purple-200 text-purple-800 text-xs font-semibold px-2 py-1 rounded">
+                  {feedback.role}
+                </span>
+                <span className="ml-3 text-gray-500 text-sm">{feedback.date}</span>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
 
-      {/* Star Rating */}
-      <div className="flex items-center">
-        {[...Array(5)].map((_, index) => {
-          return index < Math.floor(feedback.rating) ? (
-            <StarIcon key={index} className="text-yellow-500 w-5" />
-          ) : (
-            <StarIcon key={index} className="text-gray-300 w-5" />
-          );
-        })}
-      </div>
+          {/* Star Rating */}
+          <div className="flex items-center mt-1">
+            {[...Array(5)].map((_, index) => {
+              return index < Math.floor(feedback.rating) ? (
+                <StarIcon key={index} className="text-yellow-500 w-5" />
+              ) : (
+                <StarIcon key={index} className="text-gray-300 w-5" />
+              );
+            })}
+          </div>
 
-      {/* Feedback Text */}
-      <p className="mt-3 text-gray-600 text-sm">{feedback.feedback}</p>
+          {/* Feedback Text */}
+          <p className="mt-3 text-gray-600 text-sm">{feedback.feedback}</p>
 
-      {/* Pagination */}
-      <div className="flex justify-center items-center gap-3 mt-4">
-        <button
-          onClick={handlePrev}
-          disabled={currentIndex === 0}
-          className={`px-2 py-1 rounded ${currentIndex === 0 ? "text-gray-300" : "text-gray-600 hover:bg-gray-100"}`}
-        >
-          {"<"}
-        </button>
-        {feedbackData.map((_, index) => (
-          <button
-            key={index}
-            className={`px-2 py-1 text-sm ${index === currentIndex ? "text-red-500 font-bold" : "text-gray-500"}`}
-            onClick={() => setCurrentIndex(index)}
-          >
-            {index + 1}
-          </button>
-        ))}
-        <button
-          onClick={handleNext}
-          disabled={currentIndex === feedbackData.length - 1}
-          className={`px-2 py-1 rounded ${currentIndex === feedbackData.length - 1 ? "text-gray-300" : "text-gray-600 hover:bg-gray-100"
-            }`}
-        >
-          {">"}
-        </button>
-      </div>
+          {/* Pagination */}
+          <div className="flex justify-center items-center gap-3 mt-4">
+            <button
+              onClick={handlePrev}
+              disabled={currentIndex === 0}
+              className={`px-2 py-1 rounded ${currentIndex === 0 ? "text-gray-300" : "text-gray-600 hover:bg-gray-100"}`}
+            >
+              {"<"}
+            </button>
+            {feedbackData.map((_, index) => (
+              <button
+                key={index}
+                className={`px-2 py-1 text-sm ${index === currentIndex ? "text-red-500 font-bold" : "text-gray-500"}`}
+                onClick={() => setCurrentIndex(index)}
+              >
+                {index + 1}
+              </button>
+            ))}
+            <button
+              onClick={handleNext}
+              disabled={currentIndex === feedbackData.length - 1}
+              className={`px-2 py-1 rounded ${
+                currentIndex === feedbackData.length - 1 ? "text-gray-300" : "text-gray-600 hover:bg-gray-100"
+              }`}
+            >
+              {">"}
+            </button>
+          </div>
+        </>
+      )}
 
       {/* Feedback Popup */}
-      <FeedbackPopup isOpen={isPopupOpen} onClose={() => setIsPopupOpen(false)} />
+      <FeedbackPopup
+        isOpen={isPopupOpen}
+        onClose={() => setIsPopupOpen(false)}
+        onAddFeedback={handleAddFeedback}
+      />
     </div>
   );
 };
