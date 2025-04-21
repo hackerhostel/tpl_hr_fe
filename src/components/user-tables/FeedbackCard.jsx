@@ -10,44 +10,47 @@ const FeedbackPopup = ({ isOpen, onClose, onAddFeedback }) => {
   const [rating, setRating] = useState(0);
 
   const handleAddFeedback = async () => {
-    try {
-      const whoamiRes = await axios.get("/employees/who-am-i");
-      const employeeID = whoamiRes?.data?.body?.userDetails?.id;
+  try {
+    const whoamiRes = await axios.get("/employees/who-am-i");
+    const employeeID = whoamiRes?.data?.body?.userDetails?.id;
+    const email = whoamiRes?.data?.body?.userDetails?.email;
 
-      const payload = {
-        feedbackTypeID: relationship,
-        comments,
+    const payload = {
+      feedbackTypeID: Number(relationship),
+      comments,
+      rating,
+      createdBy: email,
+      employeeID,
+    };
+
+    const res = await axios.post(`/employees/${employeeID}/feedback`, {
+      feedback: payload,
+    });
+
+    if (res.status === 201) {
+      onAddFeedback({
+        id: res.data.feedbackID,
+        name: whoamiRes?.data?.body?.userDetails?.name || "Anonymous",
+        role: "Your Role", // update this if available
+        date: new Date().toLocaleDateString(),
         rating,
-        employeeID,
-      };
-
-      const res = await axios.post(`/employees/${employeeID}/feedback`, {
-        feedback: payload,
+        feedback: comments,
       });
-
-      if (res.status === 201) {
-        onAddFeedback({
-          id: res.data.feedbackID,
-          name: whoamiRes?.data?.body?.userDetails?.name || "Anonymous",
-          role: "Your Role", // If role is returned, you can update this
-          date: new Date().toLocaleDateString(),
-          rating,
-          feedback: comments,
-        });
-        onClose();
-        setRelationship("");
-        setComments("");
-        setRating(0);
-      }
-    } catch (error) {
-      console.error("Error submitting feedback:", error);
+      onClose();
+      setRelationship("");
+      setComments("");
+      setRating(0);
     }
-  };
+  } catch (error) {
+    console.error("Error submitting feedback:", error?.response?.data || error.message);
+  }
+};
+
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
+    <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
       <div className="bg-white rounded-lg shadow-lg p-6 w-[500px] relative">
         <button onClick={onClose} className="absolute top-3 right-3 text-gray-500">
           <XMarkIcon className="w-5 h-5" />
@@ -62,6 +65,7 @@ const FeedbackPopup = ({ isOpen, onClose, onAddFeedback }) => {
               label="Feedback Type"
               value={relationship}
               onChange={(e) => setRelationship(e.target.value)}
+              type="number"
             />
           </div>
 
@@ -106,31 +110,9 @@ const FeedbackCard = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
 
-  // Mock: Load initial feedback (could be replaced with actual API call)
-  useEffect(() => {
-    setFeedbackData([
-      {
-        id: 1,
-        name: "Nilanga",
-        role: "Manager",
-        date: "12-12-24",
-        rating: 4.5,
-        feedback: "Lorem ipsum dolor sit amet, consectetur adipiscing elit...",
-      },
-      {
-        id: 2,
-        name: "John Doe",
-        role: "Senior Developer",
-        date: "10-10-24",
-        rating: 5,
-        feedback: "A great experience! The team was very helpful and professional...",
-      },
-    ]);
-  }, []);
-
   const handleAddFeedback = (newFeedback) => {
     setFeedbackData((prev) => [...prev, newFeedback]);
-    setCurrentIndex(feedbackData.length); // Navigate to the new feedback
+    setCurrentIndex(feedbackData.length);
   };
 
   const handleNext = () => {
@@ -177,13 +159,12 @@ const FeedbackCard = () => {
 
           {/* Star Rating */}
           <div className="flex items-center mt-1">
-            {[...Array(5)].map((_, index) => {
-              return index < Math.floor(feedback.rating) ? (
-                <StarIcon key={index} className="text-yellow-500 w-5" />
-              ) : (
-                <StarIcon key={index} className="text-gray-300 w-5" />
-              );
-            })}
+            {[...Array(5)].map((_, index) => (
+              <StarIcon
+                key={index}
+                className={`${index < Math.floor(feedback.rating) ? "text-yellow-500" : "text-gray-300"} w-5`}
+              />
+            ))}
           </div>
 
           {/* Feedback Text */}

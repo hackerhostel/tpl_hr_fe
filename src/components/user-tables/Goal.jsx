@@ -47,53 +47,64 @@ const GoalsSection = ({ goals = [], refetchGoals }) => {
     };
 
     const handleAddGoal = async () => {
-      if (!newGoal.name || !newGoal.targetDate) {
-          addToast("Name and Target Date are required", { appearance: "warning" });
-          return;
-      }
-  
-      try {
-          // Step 1: Get current employee info
-          const whoamiRes = await axios.get("/employees/who-am-i");
-          const employeeID = whoamiRes?.data?.body?.userDetails?.id;
-          const email = whoamiRes?.data?.body?.userDetails?.email;
-  
-          console.log("Retrieved email:", email);
-  
-          if (!employeeID || !email) {
-              addToast("Failed to retrieve employee details", { appearance: "error" });
-              return;
-          }
-  
-          // Step 2: Prepare and send goal creation
-          const payload = {
-              goal: {
-                  name: newGoal.name,
-                  targetDate: newGoal.targetDate,
-                  comments: newGoal.comments,
-                  statusID: parseInt(newGoal.progress) || 1,
-                  employeeID: employeeID,
-              },
-              createdBy: email
-          };
-  
-          console.log("Payload to be sent:", payload);
-  
-          const response = await axios.post(`/employees/${employeeID}/goals`, payload);
-  
-          if (response?.data?.goalID) {
-              addToast("Goal added successfully", { appearance: "success" });
-              refetchGoals();
-              setAddingNew(false);
-              setNewGoal({ name: "", targetDate: "", progress: "", comments: "" });
-          } else {
-              throw new Error("Goal ID not returned");
-          }
-      } catch (err) {
-          console.error(err);
-          addToast("Failed to add goal", { appearance: "error" });
-      }
-  };
+        if (!newGoal.name || !newGoal.targetDate) {
+            addToast("Name and Target Date are required", { appearance: "warning" });
+            return;
+        }
+    
+        try {
+            // Step 1: Get current employee info
+            const whoamiRes = await axios.get("/employees/who-am-i");
+            const employeeID = whoamiRes?.data?.body?.userDetails?.id;
+            const email = whoamiRes?.data?.body?.userDetails?.email;
+    
+            if (!employeeID || !email) {
+                addToast("Failed to retrieve employee details", { appearance: "error" });
+                return;
+            }
+    
+            // Step 2: Validate and convert planID to number
+            const planID = parseInt(newGoal.planID);
+            if (isNaN(planID)) {
+                addToast("Invalid Development Plan selected", { appearance: "warning" });
+                return;
+            }
+    
+            // Step 3: Prepare and send goal creation
+            const payload = {
+                goal: {
+                    name: newGoal.name,
+                    planID: planID,
+                    targetDate: newGoal.targetDate,
+                    comments: newGoal.comments,
+                    statusID: parseInt(newGoal.progress) || 1,
+                    employeeID: employeeID,
+                },
+                createdBy: email
+            };
+    
+            const response = await axios.post(`/employees/${employeeID}/goals`, payload);
+    
+            if (response?.data?.goalID) {
+                addToast("Goal added successfully", { appearance: "success" });
+                refetchGoals();
+                setAddingNew(false);
+                setNewGoal({
+                    name: "",
+                    targetDate: "",
+                    progress: "",
+                    comments: "",
+                    planID: null // 
+                });
+            } else {
+                throw new Error("Goal ID not returned");
+            }
+        } catch (err) {
+            console.error("Goal Add Error:", err);
+            addToast("Failed to add goal", { appearance: "error" });
+        }
+    };
+    
   
   
   
@@ -141,13 +152,15 @@ const GoalsSection = ({ goals = [], refetchGoals }) => {
                         <th className="py-3 px-4">Target Date</th>
                         <th className="py-3 px-4">Progress</th>
                         <th className="py-3 px-4">Comments</th>
+                        <th className="py-3 px-4">plan id</th>
                         <th className="py-3 px-4">Actions</th>
+                        
                     </tr>
                 </thead>
                 <tbody>
                     {addingNew && (
                         <tr className="border-b border-gray-200">
-                            {["name", "targetDate", "progress", "comments"].map((field) => (
+                            {["name", "targetDate", "progress", "comments", "planID"].map((field) => (
                                 <td className="px-4 py-3" key={field}>
                                     <FormInput
                                         type={field === "targetDate" ? "date" : "text"}
@@ -162,7 +175,7 @@ const GoalsSection = ({ goals = [], refetchGoals }) => {
                                 <XMarkIcon
                                     onClick={() => {
                                         setAddingNew(false);
-                                        setNewGoal({ name: "", targetDate: "", progress: "", comments: "" });
+                                        setNewGoal({ name: "", targetDate: "", progress: "", comments: "", planID: "" });
                                     }}
                                     className="w-5 h-5 text-red-600 cursor-pointer"
                                 />
@@ -173,7 +186,7 @@ const GoalsSection = ({ goals = [], refetchGoals }) => {
                         <tr className="border-b border-gray-200" key={goal.id}>
                             {editingGoalId === goal.id ? (
                                 <>
-                                    {["name", "targetDate", "progress", "comments"].map((field) => (
+                                    {["name", "targetDate", "progress", "comments", "planID"].map((field) => (
                                         <td className="px-4 py-3" key={field}>
                                             <FormInput
                                                 type={field === "targetDate" ? "date" : "text"}
