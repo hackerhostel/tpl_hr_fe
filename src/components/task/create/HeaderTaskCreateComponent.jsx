@@ -67,7 +67,6 @@ const CreateEmployee = ({ onClose, isOpen }) => {
             try {
                 const res = await axios.get("/organizations/master-data");
                 const { designations, userRoles, departments, employeeStatuses } = res.data;
-                console.log("Master Data:", res.data);
                 setDesignations(designations);
                 setUserRoles(userRoles)
             } catch (err) {
