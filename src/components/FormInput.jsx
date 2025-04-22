@@ -1,4 +1,9 @@
-import { ExclamationCircleIcon, EyeIcon, EyeSlashIcon, ChevronDownIcon } from '@heroicons/react/24/solid';
+import {
+    ExclamationCircleIcon,
+    EyeIcon,
+    EyeSlashIcon,
+    ChevronDownIcon,
+} from '@heroicons/react/24/solid';
 import classNames from 'classnames';
 import React, { useState } from 'react';
 
@@ -32,11 +37,15 @@ function FormInput(
     const [inputType, setInputType] = useState(type);
 
     const handleToggleType = () => {
-        if (inputType === 'password') {
-            setInputType('text');
-        } else {
-            setInputType('password');
-        }
+        setInputType((prevType) =>
+            prevType === 'password' ? 'text' : 'password'
+        );
+    };
+
+    const getValueByPath = (obj, path) => {
+        return path.split('.').reduce((acc, key) => {
+            return acc && acc[key] !== undefined ? acc[key] : '';
+        }, obj);
     };
 
     return (
@@ -56,19 +65,19 @@ function FormInput(
                         id={name}
                         type={inputType}
                         name={name}
-                        value={name.split('.').reduce((a, b) => a[b], formValues)}
+                        value={getValueByPath(formValues, name)}
                         className={classNames(
                             'w-full p-4 rounded-lg shadow-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white',
                             {
                                 'border-red-300 text-red-900 placeholder-red-300 focus:ring-red-500 focus:border-red-500':
-                                hasError,
+                                    hasError,
                                 'focus:ring-blue-500 focus:border-blue-500 border-gray-300': !hasError,
-                            },
-                            { 'shadow-sm': showShadow },
-                            { 'mt-1': showLabel },
-                            { 'py-3': size === 'normal' },
-                            { 'pl-3': showPasswordVisibilityIcon || showDropdownIcon },
-                            { 'bg-gray-200 cursor-not-allowed': disabled },
+                                'shadow-sm': showShadow,
+                                'mt-1': showLabel,
+                                'py-3': size === 'normal',
+                                'pl-3': showPasswordVisibilityIcon || showDropdownIcon,
+                                'bg-gray-200 cursor-not-allowed': disabled,
+                            }
                         )}
                         placeholder={placeholder}
                         pattern={pattern}
@@ -99,16 +108,20 @@ function FormInput(
                 </label>
                 {hasError && (
                     <div className="absolute bottom-2 right-0 pr-3 flex items-center pointer-events-none">
-                        <ExclamationCircleIcon className="h-5 w-5 text-red-500" aria-hidden="true" />
+                        <ExclamationCircleIcon
+                            className="h-5 w-5 text-red-500"
+                            aria-hidden="true"
+                        />
                     </div>
                 )}
             </div>
             {hasError && (
-                <p className="mt-1 text-sm text-red-600" id="email-error">
+                <p className="mt-1 text-sm text-red-600" id="input-error">
                     {formErrors && formErrors[name]}
                 </p>
             )}
         </>
     );
 }
+
 export default React.forwardRef(FormInput);
