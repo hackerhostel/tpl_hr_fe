@@ -1,46 +1,73 @@
 import React, { useEffect, useState } from "react";
 import {
     CheckBadgeIcon,
+    EllipsisVerticalIcon,
     PlusCircleIcon,
-    XMarkIcon,
+    ChevronLeftIcon,
+    ChevronRightIcon,
     PencilIcon,
     TrashIcon,
-    ChevronLeftIcon,
-    ChevronRightIcon
+    XMarkIcon,
 } from "@heroicons/react/24/outline";
 import FormInput from "../FormInput";
 import { useToasts } from "react-toast-notifications";
 import axios from "axios";
 
-const CertificationSection = ({ certifications = [], refetchCertifications }) => {
+const CertificationSection = () => {
     const { addToast } = useToasts();
-    const [certList, setCertList] = useState(certifications);
+    const [certList, setCertList] = useState([]);
     const [addingNew, setAddingNew] = useState(false);
+    const [showActionsId, setShowActionsId] = useState(null);
+    const [editingId, setEditingId] = useState(null);
+    const [editRow, setEditRow] = useState({});
     const [newCert, setNewCert] = useState({
         name: "",
         certification: "",
-        institution: "",
         dueDate: "",
-        expireDate: ""
+        expireDate: "",
+        trainingStatusID: "",
+        institution: ""
     });
+
     const [editingCertId, setEditingCertId] = useState(null);
     const [editCertData, setEditCertData] = useState({});
 
     const [currentPage, setCurrentPage] = useState(1);
     const rowsPerPage = 5;
 
-    useEffect(() => {
-        const isDifferent = JSON.stringify(certifications) !== JSON.stringify(certList);
-        if (isDifferent) {
+    const handleEditClick = (cert) => {
+        setEditingId(cert.id);
+        setEditRow(cert);
+        setShowActionsId(null);
+      };
+
+    const fetchCertifications = async () => {
+        try {
+            const whoamiRes = await axios.get("/employees/who-am-i");
+            const employeeID = whoamiRes?.data?.body?.userDetails?.id;
+
+            const res = await axios.get(`/employees/${employeeID}`);
+            const certifications = res?.data?.body?.certifications || [];
+
             setCertList(certifications);
+        } catch (error) {
+            console.error("Failed to fetch certifications:", error?.response?.data || error.message);
         }
-    }, [certifications]);
+    };
+
+    useEffect(() => {
+        fetchCertifications();
+    }, []);
 
     const totalPages = Math.ceil(certList.length / rowsPerPage);
     const currentPageContent = certList.slice(
+
         (currentPage - 1) * rowsPerPage,
         currentPage * rowsPerPage
+
     );
+
+    console.log("current page", currentPageContent)
 
     const handleInputChange = (e, isEdit = false) => {
         const { name, value } = e.target;
@@ -52,84 +79,93 @@ const CertificationSection = ({ certifications = [], refetchCertifications }) =>
     };
 
     const handleAddCertification = async () => {
-      if (!newCert.name || !newCert.certification) {
-          addToast("Course Name and Certification are required", { appearance: "warning" });
-          return;
-      }
-  
-      try {
-          // Step 1: Get current employee info
-          const whoamiRes = await axios.get("/employees/who-am-i");
-          const employeeID = whoamiRes?.data?.body?.userDetails?.id;
-          const email = whoamiRes?.data?.body?.userDetails?.email;
-  
-          console.log("Retrieved email:", email);
-  
-          if (!employeeID || !email) {
-              addToast("Failed to retrieve employee details", { appearance: "error" });
-              return;
-          }
-  
-          // Step 2: Prepare and send certification creation
-          const payload = {
-              certification: {
-                  name: newCert.name,
-                  certification: newCert.certification,
-                  institution: newCert.institution,
-                  dueDate: newCert.dueDate,
-                  expireDate: newCert.expireDate,
-                  trainingStatusID: newCert.trainingStatusID,
-                  employeeID: employeeID,
-              },
-              createdBy: email
-          };
-  
-          console.log("Payload to be sent:", payload);
-  
-          const response = await axios.post(`/employees/${employeeID}/certifications`, payload);
-  
-          if (response?.data?.certificationID) {
-              addToast("Certification added successfully", { appearance: "success" });
-              refetchCertifications();
-              setAddingNew(false);
-              setNewCert({
-                  name: "",
-                  certification: "",
-                  institution: "",
-                  dueDate: "",
-                  expireDate: "",
-                  trainingStatusID: ""
-              });
-          } else {
-              throw new Error("Certification ID not returned");
-          }
-      } catch (err) {
-          console.error(err);
-          addToast("Failed to add certification", { appearance: "error" });
-      }
-  };
-  
-    const handleEditCertification = async (id) => {
+        if (!newCert.name || !newCert.certification) {
+            addToast("Course Name and Certification are required", { appearance: "warning" });
+            return;
+        }
+
         try {
-            const response = await axios.put(`/certifications/${id}`, editCertData);
-            if (response?.data?.success) {
+            const whoamiRes = await axios.get("/employees/who-am-i");
+            const employeeID = whoamiRes?.data?.body?.userDetails?.id;
+            const email = whoamiRes?.data?.body?.userDetails?.email;
+
+            const payload = {
+                certification: { ...newCert, employeeID },
+                createdBy: email
+            };
+
+            const response = await axios.post(`/employees/${employeeID}/certifications`, payload);
+
+            if (response?.data?.certificationID) {
+                addToast("Certification added successfully", { appearance: "success" });
+                fetchCertifications();
+                setAddingNew(false);
+                setNewCert({
+                    name: "",
+                    certification: "",
+                    dueDate: "",
+                    expireDate: "",
+                    trainingStatusID: ""
+                });
+            } else {
+                throw new Error("Certification ID not returned");
+            }
+        } catch (err) {
+            console.error(err);
+            addToast("Failed to add certification", { appearance: "error" });
+        }
+    };
+
+    const handleEditCertification = async (certificationID) => {
+        try {
+            const whoamiRes = await axios.get("/employees/who-am-i");
+            const employeeID = whoamiRes?.data?.body?.userDetails?.id;
+
+            // Remove 'institution' from the payload if it's not part of the backend schema
+            const { institution, ...updatedCertData } = editCertData;
+
+            const payload = {
+                certification: {
+                    ...updatedCertData,
+                    institution: editCertData.institution || undefined,  // Only send if present
+                    employeeID,
+                    certificationID
+                }
+            };
+
+            const response = await axios.put(
+                `/employees/${employeeID}/certifications/${certificationID}`,
+                payload
+            );
+
+            if (response?.data?.certificationID) {
                 addToast("Certification updated successfully", { appearance: "success" });
-                refetchCertifications();
+                fetchCertifications();
                 setEditingCertId(null);
             }
         } catch (err) {
+            console.error("Update error:", err);
             addToast("Failed to update certification", { appearance: "error" });
         }
     };
 
-    const handleDeleteCertification = async (id) => {
+
+
+    const handleDeleteCertification = async (certificationID) => {
         try {
-            const response = await axios.delete(`/certifications/${id}`);
-            if (response?.data?.success) {
+            const whoamiRes = await axios.get("/employees/who-am-i");
+            const employeeID = whoamiRes?.data?.body?.userDetails?.id;
+
+            const res = await axios.delete(`/employees/${employeeID}/certifications/${certificationID}`);
+
+            if (res?.status === 200) {
                 addToast("Certification deleted successfully", { appearance: "success" });
-                refetchCertifications();
+                fetchCertifications();
+            } else {
+                addToast("Failed to delete certification", { appearance: "error" });
             }
-        } catch (err) {
+        } catch (error) {
+            console.error("Delete error:", error);
             addToast("Failed to delete certification", { appearance: "error" });
         }
     };
@@ -153,17 +189,17 @@ const CertificationSection = ({ certifications = [], refetchCertifications }) =>
                     <tr className="text-left text-secondary-grey border-b border-gray-200">
                         <th className="py-3 px-4">Course Name</th>
                         <th className="py-3 px-4">Certification</th>
-                        <th className="py-3 px-4">Provider</th>
                         <th className="py-3 px-4">Due Date</th>
                         <th className="py-3 px-4">Expiry Date</th>
                         <th className="py-3 px-4">Training</th>
+                        <th className="py-3 px-4">Institution</th>
                         <th className="py-3 px-4">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {addingNew && (
                         <tr className="border-b border-gray-200">
-                            {["name", "certification", "institution", "dueDate", "expireDate", "trainingStatusID"].map((field) => (
+                            {["name", "certification", "dueDate", "expireDate", "trainingStatusID", "institution"].map((field) => (
                                 <td className="px-4 py-3" key={field}>
                                     <FormInput
                                         type={field.includes("Date") ? "date" : "text"}
@@ -173,6 +209,7 @@ const CertificationSection = ({ certifications = [], refetchCertifications }) =>
                                     />
                                 </td>
                             ))}
+
                             <td className="px-4 py-3 flex gap-3">
                                 <CheckBadgeIcon onClick={handleAddCertification} className="w-5 h-5 text-green-600 cursor-pointer" />
                                 <XMarkIcon
@@ -181,67 +218,88 @@ const CertificationSection = ({ certifications = [], refetchCertifications }) =>
                                         setNewCert({
                                             name: "",
                                             certification: "",
-                                            institution: "",
                                             dueDate: "",
                                             expireDate: "",
-                                            trainingStatusID: ""
+                                            trainingStatusID: "",
+                                            institution: ""
                                         });
+
                                     }}
                                     className="w-5 h-5 text-red-600 cursor-pointer"
                                 />
                             </td>
                         </tr>
                     )}
-                    {currentPageContent.map((cert) => (
-                        <tr className="border-b border-gray-200" key={cert.id}>
-                            {editingCertId === cert.id ? (
-                                <>
-                                    {["name", "certification", "institution", "dueDate", "expireDate"].map((field) => (
-                                        <td className="px-4 py-3" key={field}>
-                                            <FormInput
-                                                type={field.includes("Date") ? "date" : "text"}
-                                                name={field}
-                                                formValues={{ [field]: editCertData[field] }}
-                                                onChange={(e) => handleInputChange(e, true)}
-                                            />
-                                        </td>
-                                    ))}
-                                    <td className="px-4 py-3 flex gap-3">
-                                        <CheckBadgeIcon
-                                            onClick={() => handleEditCertification(cert.id)}
-                                            className="w-5 h-5 text-green-600 cursor-pointer"
-                                        />
-                                        <XMarkIcon
-                                            onClick={() => setEditingCertId(null)}
-                                            className="w-5 h-5 text-red-600 cursor-pointer"
-                                        />
-                                    </td>
-                                </>
-                            ) : (
-                                <>
-                                    <td className="px-4 py-3">{cert.name}</td>
-                                    <td className="px-4 py-3">{cert.certification}</td>
-                                    <td className="px-4 py-3">{cert.institution}</td>
-                                    <td className="px-4 py-3">{cert.dueDate}</td>
-                                    <td className="px-4 py-3">{cert.expireDate}</td>
-                                    <td className="px-4 py-3">{cert.trainingStatusID}</td>
-                                    <td className="px-4 py-3 flex gap-3">
-                                        <PencilIcon
-                                            onClick={() => {
-                                                setEditingCertId(cert.id);
-                                                setEditCertData(cert);
-                                            }}
-                                            className="w-5 h-5 text-blue-600 cursor-pointer"
-                                        />
-                                        <TrashIcon
-                                            onClick={() => handleDeleteCertification(cert.id)}
-                                            className="w-5 h-5 text-red-600 cursor-pointer"
-                                        />
-                                    </td>
-                                </>
-                            )}
-                        </tr>
+
+{currentPageContent.map((cert) => {
+    const isEditing = editingCertId === cert.id;
+
+    return (
+        <tr className="border-b border-gray-200" key={cert.id}>
+            {isEditing ? (
+                <>
+                    {["name", "certification", "dueDate", "expireDate", "trainingStatusID", "institution"].map((field) => (
+                        <td className="px-4 py-3" key={field}>
+                            <FormInput
+                                type={field.includes("Date") ? "date" : "text"}
+                                name={field}
+                                formValues={editCertData}
+                                onChange={(e) => handleInputChange(e, true)}
+                            />
+                        </td>
                     ))}
+                    <td className="px-4 py-3 flex gap-3">
+                        <CheckBadgeIcon
+                            onClick={() => handleEditCertification(cert.id)}
+                            className="w-5 h-5 text-green-600 cursor-pointer"
+                        />
+                        <XMarkIcon
+                            onClick={() => setEditingCertId(null)}
+                            className="w-5 h-5 text-red-600 cursor-pointer"
+                        />
+                    </td>
+                </>
+            ) : (
+                <>
+                    <td className="px-4 py-3">{cert.name}</td>
+                    <td className="px-4 py-3">{cert.certification}</td>
+                    <td className="px-4 py-3">{cert.dueDate?.split("T")[0]}</td>
+                    <td className="px-4 py-3">{cert.expireDate?.split("T")[0]}</td>
+                    <td className="px-4 py-3">{cert.trainingStatusID}</td>
+                    <td className="px-4 py-3">{cert.institution}</td>
+                    <td className="px-4 py-4 relative">
+                        {showActionsId === cert.id ? (
+                            <div className="flex gap-3">
+                                <PencilIcon
+                                    className="w-5 h-5 text-text-color     cursor-pointer"
+                                    onClick={() => {
+                                        setEditingCertId(cert.id);
+                                        setEditCertData(cert);
+                                        setShowActionsId(null);
+                                    }}
+                                />
+                                <TrashIcon
+                                    className="w-5 h-5 text-text-color cursor-pointer"
+                                    onClick={() => handleDeleteCertification(cert.id)}
+                                />
+                                <XMarkIcon
+                                    className="w-5 h-5 text-text-color cursor-pointer"
+                                    onClick={() => setShowActionsId(null)}
+                                />
+                            </div>
+                        ) : (
+                            <EllipsisVerticalIcon
+                                className="w-5 h-5 text-text-color cursor-pointer"
+                                onClick={() => setShowActionsId(cert.id)}
+                            />
+                        )}
+                    </td>
+                </>
+            )}
+        </tr>
+    );
+})}
+
                 </tbody>
             </table>
 
