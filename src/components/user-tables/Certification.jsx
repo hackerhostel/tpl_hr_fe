@@ -35,11 +35,12 @@ const CertificationSection = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const rowsPerPage = 5;
 
+
     const handleEditClick = (cert) => {
         setEditingId(cert.id);
         setEditRow(cert);
         setShowActionsId(null);
-      };
+    };
 
     const fetchCertifications = async () => {
         try {
@@ -231,74 +232,83 @@ const CertificationSection = () => {
                         </tr>
                     )}
 
-{currentPageContent.map((cert) => {
-    const isEditing = editingCertId === cert.id;
+                    {currentPageContent.map((cert) => {
+                        const isEditing = editingCertId === cert.id;
 
-    return (
-        <tr className="border-b border-gray-200" key={cert.id}>
-            {isEditing ? (
-                <>
-                    {["name", "certification", "dueDate", "expireDate", "trainingStatusID", "institution"].map((field) => (
-                        <td className="px-4 py-3" key={field}>
-                            <FormInput
-                                type={field.includes("Date") ? "date" : "text"}
-                                name={field}
-                                formValues={editCertData}
-                                onChange={(e) => handleInputChange(e, true)}
-                            />
-                        </td>
-                    ))}
-                    <td className="px-4 py-3 flex gap-3">
-                        <CheckBadgeIcon
-                            onClick={() => handleEditCertification(cert.id)}
-                            className="w-5 h-5 text-green-600 cursor-pointer"
-                        />
-                        <XMarkIcon
-                            onClick={() => setEditingCertId(null)}
-                            className="w-5 h-5 text-red-600 cursor-pointer"
-                        />
-                    </td>
-                </>
-            ) : (
-                <>
-                    <td className="px-4 py-3">{cert.name}</td>
-                    <td className="px-4 py-3">{cert.certification}</td>
-                    <td className="px-4 py-3">{cert.dueDate?.split("T")[0]}</td>
-                    <td className="px-4 py-3">{cert.expireDate?.split("T")[0]}</td>
-                    <td className="px-4 py-3">{cert.trainingStatusID}</td>
-                    <td className="px-4 py-3">{cert.institution}</td>
-                    <td className="px-4 py-4 relative">
-                        {showActionsId === cert.id ? (
-                            <div className="flex gap-3">
-                                <PencilIcon
-                                    className="w-5 h-5 text-text-color     cursor-pointer"
-                                    onClick={() => {
-                                        setEditingCertId(cert.id);
-                                        setEditCertData(cert);
-                                        setShowActionsId(null);
-                                    }}
-                                />
-                                <TrashIcon
-                                    className="w-5 h-5 text-text-color cursor-pointer"
-                                    onClick={() => handleDeleteCertification(cert.id)}
-                                />
-                                <XMarkIcon
-                                    className="w-5 h-5 text-text-color cursor-pointer"
-                                    onClick={() => setShowActionsId(null)}
-                                />
-                            </div>
-                        ) : (
-                            <EllipsisVerticalIcon
-                                className="w-5 h-5 text-text-color cursor-pointer"
-                                onClick={() => setShowActionsId(cert.id)}
-                            />
-                        )}
-                    </td>
-                </>
-            )}
-        </tr>
-    );
-})}
+                        return (
+                            <tr className="border-b border-gray-200" key={cert.id}>
+                                {isEditing ? (
+                                    <>
+                                        {["name", "certification", "dueDate", "expireDate", "trainingStatusID", "institution"].map((field) => (
+                                            <td className="px-4 py-3" key={field}>
+                                                <FormInput
+                                                    type={field.includes("Date") ? "date" : "text"}
+                                                    name={field}
+                                                    value={editCertData[field] || ""}
+                                                    onChange={(e) => handleInputChange(e, true)}
+                                                />
+
+                                            </td>
+                                        ))}
+                                        <td className="px-4 py-3 flex gap-3">
+                                            <CheckBadgeIcon
+                                                onClick={() => handleEditCertification(cert.id)}
+                                                className="w-5 h-5 text-green-600 cursor-pointer"
+                                            />
+                                            <XMarkIcon
+                                                onClick={() => setEditingCertId(null)}
+                                                className="w-5 h-5 text-red-600 cursor-pointer"
+                                            />
+                                        </td>
+                                    </>
+                                ) : (
+                                    <>
+                                        <td className="px-4 py-3">{cert.name}</td>
+                                        <td className="px-4 py-3">{cert.certification}</td>
+                                        <td className="px-4 py-3">{cert.dueDate?.split("T")[0]}</td>
+                                        <td className="px-4 py-3">{cert.expireDate?.split("T")[0]}</td>
+                                        <td className="px-4 py-3">{cert.trainingStatusID}</td>
+                                        <td className="px-4 py-3">{cert.institution}</td>
+                                        <td className="px-4 py-4 relative">
+                                            {showActionsId === cert.id ? (
+                                                <div className="flex gap-3">
+                                                    <PencilIcon
+                                                        className="w-5 h-5 text-text-color cursor-pointer"
+                                                        onClick={() => {
+                                                            setEditCertData({
+                                                                name: cert.name || "",
+                                                                certification: cert.certification || "",
+                                                                dueDate: cert.dueDate ? cert.dueDate.split("T")[0] : "",
+                                                                expireDate: cert.expireDate ? cert.expireDate.split("T")[0] : "",
+                                                                trainingStatusID: cert.trainingStatusID || "",
+                                                                institution: cert.institution || ""
+                                                            });
+                                                            setEditingCertId(cert.id);
+                                                            setShowActionsId(null);
+                                                        }}
+                                                    />
+
+                                                    <TrashIcon
+                                                        className="w-5 h-5 text-text-color cursor-pointer"
+                                                        onClick={() => handleDeleteCertification(cert.id)}
+                                                    />
+                                                    <XMarkIcon
+                                                        className="w-5 h-5 text-text-color cursor-pointer"
+                                                        onClick={() => setShowActionsId(null)}
+                                                    />
+                                                </div>
+                                            ) : (
+                                                <EllipsisVerticalIcon
+                                                    className="w-5 h-5 text-text-color cursor-pointer"
+                                                    onClick={() => setShowActionsId(cert.id)}
+                                                />
+                                            )}
+                                        </td>
+                                    </>
+                                )}
+                            </tr>
+                        );
+                    })}
 
                 </tbody>
             </table>
