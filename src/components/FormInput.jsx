@@ -1,6 +1,6 @@
-import {ChevronDownIcon, ExclamationCircleIcon, EyeIcon, EyeSlashIcon} from '@heroicons/react/24/solid';
+import { ExclamationCircleIcon, EyeIcon, EyeSlashIcon, ChevronDownIcon } from '@heroicons/react/24/solid';
 import classNames from 'classnames';
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 
 function FormInput(
     {
@@ -64,11 +64,11 @@ function FormInput(
                                 hasError,
                                 'focus:ring-blue-500 focus:border-blue-500 border-gray-300': !hasError,
                             },
-                            {'shadow-sm': showShadow},
-                            {'mt-1': showLabel},
-                            {'py-3': size === 'normal'},
-                            {'pl-3': showPasswordVisibilityIcon || showDropdownIcon},
-                            {'bg-gray-200 cursor-not-allowed': disabled},
+                            { 'shadow-sm': showShadow },
+                            { 'mt-1': showLabel },
+                            { 'py-3': size === 'normal' },
+                            { 'pl-3': showPasswordVisibilityIcon || showDropdownIcon },
+                            { 'bg-gray-200 cursor-not-allowed': disabled },
                         )}
                         placeholder={placeholder}
                         pattern={pattern}
@@ -87,19 +87,19 @@ function FormInput(
                             onClick={handleToggleType}
                         >
                             {inputType === 'password' ? (
-                                <EyeIcon className="h-5 w-5 text-gray-400"/>
+                                <EyeIcon className="h-5 w-5 text-gray-400" />
                             ) : (
-                                <EyeSlashIcon className="h-5 w-5 text-gray-400"/>
+                                <EyeSlashIcon className="h-5 w-5 text-gray-400" />
                             )}
                         </button>
                     )}
                     {showDropdownIcon && (
-                        <ChevronDownIcon className="absolute inset-y-0 right-0 h-5 w-5 text-gray-400 mr-3 mt-6"/>
+                        <ChevronDownIcon className="absolute inset-y-0 right-0 h-5 w-5 text-gray-400 mr-3 mt-6" />
                     )}
                 </label>
                 {hasError && (
                     <div className="absolute bottom-2 right-0 pr-3 flex items-center pointer-events-none">
-                        <ExclamationCircleIcon className="h-5 w-5 text-red-500" aria-hidden="true"/>
+                        <ExclamationCircleIcon className="h-5 w-5 text-red-500" aria-hidden="true" />
                     </div>
                 )}
             </div>

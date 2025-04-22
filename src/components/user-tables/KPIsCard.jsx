@@ -1,112 +1,234 @@
-import React, { useState } from "react";
-import { PlusCircleIcon, StarIcon } from "@heroicons/react/24/outline/index.js";
+import React, { useEffect, useState } from "react";
+import {
+    CheckBadgeIcon,
+    PlusCircleIcon,
+    XMarkIcon,
+    PencilIcon,
+    TrashIcon,
+    ChevronLeftIcon,
+    ChevronRightIcon
+} from "@heroicons/react/24/outline";
+import FormInput from "../FormInput";
+import { useToasts } from "react-toast-notifications";
+import axios from "axios";
 
-const feedbackData = [
-  {
-    id: 1,
-    name: "Nilanga",
-    role: "Manager",
-    date: "12-12-24",
-    rating: 4.5,
-    feedback:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua...",
-  },
-  {
-    id: 2,
-    name: "John Doe",
-    role: "Senior Developer",
-    date: "10-10-24",
-    rating: 5,
-    feedback:
-      "A great experience! The team was very helpful and professional...",
-  },
-];
+const KPISection = ({ kpis = [], refetchKPIs }) => {
+    const { addToast } = useToasts();
+    const [kpiList, setKPIList] = useState(kpis);
+    const [addingNew, setAddingNew] = useState(false);
+    const [newKPI, setNewKPI] = useState({
+        name: "",
+        description: "",
+        formula: "",
+        criteria: "",
+        targetMetrics: ""
+    });
+    const [editingKPIId, setEditingKPIId] = useState(null);
+    const [editKPIData, setEditKPIData] = useState({});
 
-const KPIs = () => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const feedback = feedbackData[currentIndex];
+    const [currentPage, setCurrentPage] = useState(1);
+    const rowsPerPage = 5;
 
-  const handleNext = () => {
-    if (currentIndex < feedbackData.length - 1) {
-      setCurrentIndex(currentIndex + 1);
-    }
-  };
+    useEffect(() => {
+        if (JSON.stringify(kpis) !== JSON.stringify(kpiList)) {
+            setKPIList(kpis);
+        }
+    }, [kpis]);
 
-  const handlePrev = () => {
-    if (currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1);
-    }
-  };
+    const totalPages = Math.ceil(kpiList.length / rowsPerPage);
+    const currentPageContent = kpiList.slice(
+        (currentPage - 1) * rowsPerPage,
+        currentPage * rowsPerPage
+    );
 
-  return (
-    <div style={{width:"100%"}}  className="bg-white rounded-md p-5 ">
-      {/* Header */}
-      <div className="flex space-x-3 items-center border-b pb-2">
-        <div>
-          <span className="text-lg font-semibold text-text-color">
-            KPIs ({currentIndex + 1} / {feedbackData.length})
-          </span>
+    const handleInputChange = (e, isEdit = false) => {
+        const { name, value } = e.target;
+        if (isEdit) {
+            setEditKPIData({ ...editKPIData, [name]: value });
+        } else {
+            setNewKPI({ ...newKPI, [name]: value });
+        }
+    };
+
+    const handleAddKPI = async () => {
+        if (!newKPI.name || !newKPI.description) {
+            addToast("Name and Description are required", { appearance: "warning" });
+            return;
+        }
+
+        try {
+            const response = await axios.post("/kpis", newKPI);
+            if (response?.data?.id) {
+                addToast("KPI added successfully", { appearance: "success" });
+                refetchKPIs();
+                setAddingNew(false);
+                setNewKPI({
+                    name: "",
+                    description: "",
+                    formula: "",
+                    criteria: "",
+                    targetMetrics: ""
+                });
+            } else {
+                throw new Error("KPI creation failed");
+            }
+        } catch (err) {
+            addToast("Failed to add KPI", { appearance: "error" });
+        }
+    };
+
+    const handleEditKPI = async (id) => {
+        try {
+            const response = await axios.put(`/kpis/${id}`, editKPIData);
+            if (response?.data?.success) {
+                addToast("KPI updated successfully", { appearance: "success" });
+                refetchKPIs();
+                setEditingKPIId(null);
+            }
+        } catch (err) {
+            addToast("Failed to update KPI", { appearance: "error" });
+        }
+    };
+
+    const handleDeleteKPI = async (id) => {
+        try {
+            const response = await axios.delete(`/kpis/${id}`);
+            if (response?.data?.success) {
+                addToast("KPI deleted successfully", { appearance: "success" });
+                refetchKPIs();
+            }
+        } catch (err) {
+            addToast("Failed to delete KPI", { appearance: "error" });
+        }
+    };
+
+    return (
+        <div className="w-full mt-8 px-6 py-4 bg-white rounded-md">
+            <div className="flex justify-between mb-4">
+                <span className="text-lg text-text-color">KPIs</span>
+                {!addingNew && (
+                    <div
+                        className="flex items-center space-x-2 text-text-color cursor-pointer"
+                        onClick={() => setAddingNew(true)}
+                    >
+                        <PlusCircleIcon className="w-5 text-text-color" />
+                        <span>Add New</span>
+                    </div>
+                )}
+            </div>
+            <table className="table-auto w-full border-collapse">
+                <thead>
+                    <tr className="text-left text-secondary-grey border-b border-gray-200">
+                        <th className="py-3 px-4">Name</th>
+                        <th className="py-3 px-4">Description</th>
+                        <th className="py-3 px-4">Formula</th>
+                        <th className="py-3 px-4">Criteria</th>
+                        <th className="py-3 px-4">Target Metrics</th>
+                        <th className="py-3 px-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {addingNew && (
+                        <tr className="border-b border-gray-200">
+                            {["name", "description", "formula", "criteria", "targetMetrics"].map((field) => (
+                                <td className="px-4 py-3" key={field}>
+                                    <FormInput
+                                        name={field}
+                                        formValues={{ [field]: newKPI[field] }}
+                                        onChange={handleInputChange}
+                                    />
+                                </td>
+                            ))}
+                            <td className="px-4 py-3 flex gap-3">
+                                <CheckBadgeIcon onClick={handleAddKPI} className="w-5 h-5 text-green-600 cursor-pointer" />
+                                <XMarkIcon
+                                    onClick={() => {
+                                        setAddingNew(false);
+                                        setNewKPI({
+                                            name: "",
+                                            description: "",
+                                            formula: "",
+                                            criteria: "",
+                                            targetMetrics: ""
+                                        });
+                                    }}
+                                    className="w-5 h-5 text-red-600 cursor-pointer"
+                                />
+                            </td>
+                        </tr>
+                    )}
+                    {currentPageContent.map((kpi) => (
+                        <tr className="border-b border-gray-200" key={kpi.id}>
+                            {editingKPIId === kpi.id ? (
+                                <>
+                                    {["name", "description", "formula", "criteria", "targetMetrics"].map((field) => (
+                                        <td className="px-4 py-3" key={field}>
+                                            <FormInput
+                                                name={field}
+                                                formValues={{ [field]: editKPIData[field] }}
+                                                onChange={(e) => handleInputChange(e, true)}
+                                            />
+                                        </td>
+                                    ))}
+                                    <td className="px-4 py-3 flex gap-3">
+                                        <CheckBadgeIcon
+                                            onClick={() => handleEditKPI(kpi.id)}
+                                            className="w-5 h-5 text-green-600 cursor-pointer"
+                                        />
+                                        <XMarkIcon
+                                            onClick={() => setEditingKPIId(null)}
+                                            className="w-5 h-5 text-red-600 cursor-pointer"
+                                        />
+                                    </td>
+                                </>
+                            ) : (
+                                <>
+                                    <td className="px-4 py-3">{kpi.name}</td>
+                                    <td className="px-4 py-3">{kpi.description}</td>
+                                    <td className="px-4 py-3">{kpi.formula}</td>
+                                    <td className="px-4 py-3">{kpi.criteria}</td>
+                                    <td className="px-4 py-3">{kpi.targetMetrics}</td>
+                                    <td className="px-4 py-3 flex gap-3">
+                                        <PencilIcon
+                                            onClick={() => {
+                                                setEditingKPIId(kpi.id);
+                                                setEditKPIData(kpi);
+                                            }}
+                                            className="w-5 h-5 text-blue-600 cursor-pointer"
+                                        />
+                                        <TrashIcon
+                                            onClick={() => handleDeleteKPI(kpi.id)}
+                                            className="w-5 h-5 text-red-600 cursor-pointer"
+                                        />
+                                    </td>
+                                </>
+                            )}
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+
+            {kpiList.length > rowsPerPage && (
+                <div className="w-full flex gap-5 items-center justify-end mt-4">
+                    <button
+                        onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                        className={`p-2 rounded-full bg-gray-200 ${currentPage === 1 ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-300"}`}
+                        disabled={currentPage === 1}
+                    >
+                        <ChevronLeftIcon className="w-4 h-4 text-secondary-grey" />
+                    </button>
+                    <span className="text-gray-500 text-center">Page {currentPage} of {totalPages}</span>
+                    <button
+                        onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                        className={`p-2 rounded-full bg-gray-200 ${currentPage === totalPages ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-300"}`}
+                        disabled={currentPage === totalPages}
+                    >
+                        <ChevronRightIcon className="w-4 h-4 text-secondary-grey" />
+                    </button>
+                </div>
+            )}
         </div>
-
-        <div>
-          <div className="flex text-text-color">
-          <span>Active working hours</span>
-          <span className="ml-36">35</span>
-          </div>
-          
-        </div>
-
-      </div>
-
-      {/* User Info */}
-      <div className="mt-3">
-        <div>
-          <span className="text-black font-bold">Description</span>
-          <p className="mt-2 text-text-color  ">Tracks the active working hours on a weekly basis,</p>
-        </div>
-
-        <div className="mt-4">
-          <span className="text-black font-bold">Formula</span>
-          <p className="mt-2 text-text-color">(worked hours / allocated worked hours) * 100</p>
-        </div>
-
-        <div className="mt-4">
-          <p className="text-text-color">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation </p>
-        </div>
-      </div>
-
-
-      {/* Pagination */}
-      <div className="flex justify-center items-center gap-3 mt-4">
-        <button
-          onClick={handlePrev}
-          disabled={currentIndex === 0}
-          className={`px-2 py-1 rounded ${currentIndex === 0 ? "text-gray-300" : "text-gray-600 hover:bg-gray-100"
-            }`}
-        >
-          {"<"}
-        </button>
-        {feedbackData.map((_, index) => (
-          <button
-            key={index}
-            className={`px-2 py-1 text-sm ${index === currentIndex ? "text-red-500 font-bold" : "text-gray-500"
-              }`}
-            onClick={() => setCurrentIndex(index)}
-          >
-            {index + 1}
-          </button>
-        ))}
-        <button
-          onClick={handleNext}
-          disabled={currentIndex === feedbackData.length - 1}
-          className={`px-2 py-1 rounded ${currentIndex === feedbackData.length - 1 ? "text-gray-300" : "text-gray-600 hover:bg-gray-100"
-            }`}
-        >
-          {">"}
-        </button>
-      </div>
-    </div>
-  );
+    );
 };
 
-export default KPIs;
+export default KPISection;
