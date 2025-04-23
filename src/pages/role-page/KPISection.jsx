@@ -267,7 +267,7 @@ const KPISection = ({
                         <tbody>
                         {showNewRow && (
                             <tr className="border-b border-gray-200">
-                                <td className="px-4 py-5 w-44">
+                                <td className="px-4 py-5">
                                     <FormInput
                                         type="text"
                                         name="name"
@@ -275,7 +275,7 @@ const KPISection = ({
                                         onChange={({target: {name, value}}) => handleFormChange(name, value, true)}
                                     />
                                 </td>
-                                <td className="px-4 py-5 w-44">
+                                <td className="px-4 py-5">
                                     <FormInput
                                         type="text"
                                         name="description"
@@ -283,7 +283,7 @@ const KPISection = ({
                                         onChange={({target: {name, value}}) => handleFormChange(name, value, true)}
                                     />
                                 </td>
-                                <td className="px-4 py-5 w-44">
+                                <td className="px-4 py-5">
                                     <FormInput
                                         type="text"
                                         name="formula"
@@ -291,7 +291,7 @@ const KPISection = ({
                                         onChange={({target: {name, value}}) => handleFormChange(name, value, true)}
                                     />
                                 </td>
-                                <td className="px-4 py-5 w-44">
+                                <td className="px-4 py-5">
                                     <FormInput
                                         type="text"
                                         name="evaluationCriteria"
@@ -299,7 +299,7 @@ const KPISection = ({
                                         onChange={({target: {name, value}}) => handleFormChange(name, value, true)}
                                     />
                                 </td>
-                                <td className="px-4 py-5 w-44">
+                                <td className="px-4 py-5">
                                     <FormInput
                                         type="text"
                                         name="targetMetrics"
