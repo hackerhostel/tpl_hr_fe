@@ -68,7 +68,6 @@ const CertificationSection = () => {
 
     );
 
-    console.log("current page", currentPageContent)
 
     const handleInputChange = (e, isEdit = false) => {
         const { name, value } = e.target;
@@ -132,7 +131,7 @@ const CertificationSection = () => {
                     employeeID,
                     certificationID
                 }
-            };
+            };  
 
             const response = await axios.put(
                 `/employees/${employeeID}/certifications/${certificationID}`,
@@ -244,7 +243,7 @@ const CertificationSection = () => {
                                                 <FormInput
                                                     type={field.includes("Date") ? "date" : "text"}
                                                     name={field}
-                                                    value={editCertData[field] || ""}
+                                                    formValues={{ [field]: editCertData[field] }}
                                                     onChange={(e) => handleInputChange(e, true)}
                                                 />
 
