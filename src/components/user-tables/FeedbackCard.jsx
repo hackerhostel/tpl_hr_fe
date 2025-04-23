@@ -91,8 +91,8 @@ const FeedbackPopup = ({ isOpen, onClose, onAddFeedback }) => {
       if (res.status === 201) {
         onAddFeedback({
           id: res.data.feedbackID,
-          name: res.data.firstName, // Adjust if your backend returns creator name
-          role: "Contributor", // Or dynamically assign based on feedbackType?
+          name: res.data.firstName,
+          role: "Contributor", 
           date: new Date().toLocaleDateString(),
           rating,
           feedback: comments,
