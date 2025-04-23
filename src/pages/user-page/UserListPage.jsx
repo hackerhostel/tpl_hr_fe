@@ -96,13 +96,14 @@ const UserListPage = () => {
     });
   }, [selectedUser]);
 
-  const handleInputChange = (e) => {
+  const handleInputChange = (e, isText = true) => {
     const { name, value } = e.target;
     setFormValues((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: isText ? value : Number(value),
     }));
   };
+
 
   const toggleEditable = () => {
     setIsEditable(!isEditable);
@@ -136,17 +137,6 @@ const UserListPage = () => {
     }
   };
 
-  const validateForm = () => {
-    const errors = {};
-
-    if (!formValues.firstName.trim()) errors.firstName = "First name is required";
-    if (!formValues.lastName.trim()) errors.lastName = "Last name is required";
-    if (!formValues.email.trim()) errors.email = "Email is required";
-    if (!formValues.contactNumber.trim()) errors.contactNumber = "Contact number is required";
-
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
 
 
 
@@ -217,18 +207,20 @@ const UserListPage = () => {
                 <FormInput
                   name="firstName"
                   placeholder="First Name"
-                  value={formValues.firstName}
-                  onChange={handleInputChange}
+                  formValues={formValues}
+                  onChange={(e) => handleInputChange(e, true)}
                   className={`w-full p-2 border rounded-md ${isEditable ? "bg-white" : "bg-user-detail-box cursor-not-allowed"}`} disabled={!isEditable}
                   formErrors={formErrors}
-                  showErrors={true} showLabel={true}
+                  showErrors={true}
+                  showLabel={true}
                 />
+
 
                 <FormInput
                   name="lastName"
                   placeholder="Last Name"
-                  value={formValues.lastName}
-                  onChange={handleInputChange}
+                  formValues={formValues}
+                  onChange={(e) => handleInputChange(e, true)}
                   className={`w-full p-2 border rounded-md ${isEditable ? "bg-white" : "bg-user-detail-box cursor-not-allowed"}`} disabled={!isEditable}
                   formErrors={formErrors}
                   showErrors={true} showLabel={true}
@@ -236,9 +228,8 @@ const UserListPage = () => {
 
                 <FormInput
                   name="email"
-                  placeholder="Email"
-                  value={formValues.email}
-                  onChange={handleInputChange}
+                  formValues={formValues}
+                  onChange={(e) => handleInputChange(e, true)}
                   className={`w-full p-2 border rounded-md ${isEditable ? "bg-white" : "bg-user-detail-box cursor-not-allowed"}`} disabled={!isEditable}
                   formErrors={formErrors}
                   showErrors={true} showLabel={true}
@@ -247,8 +238,8 @@ const UserListPage = () => {
                 <FormInput
                   name="contactNumber"
                   placeholder="Phone"
-                  value={formValues.contactNumber}
-                  onChange={handleInputChange}
+                  formValues={formValues}
+                  onChange={(e) => handleInputChange(e, true)}
                   className={`w-full p-2 border rounded-md ${isEditable ? "bg-white" : "bg-user-detail-box cursor-not-allowed"}`} disabled={!isEditable}
                   formErrors={formErrors}
                   showErrors={true} showLabel={true}
@@ -258,8 +249,8 @@ const UserListPage = () => {
                 <FormInput
                   name="departmentID"
                   placeholder="Department"
-                  value={formValues.departmentID}
-                  onChange={handleInputChange}
+                  formValues={formValues}
+                  onChange={(e) => handleInputChange(e, true)}
                   className={`w-full p-2 border rounded-md ${isEditable ? "bg-white" : "bg-user-detail-box cursor-not-allowed"}`} disabled={!isEditable}
                   formErrors={formErrors}
                   showErrors={true} showLabel={true}
@@ -271,8 +262,8 @@ const UserListPage = () => {
                 <FormInput
                   name="hiredDate"
                   placeholder="Hired Date"
-                  value={formValues.hiredDate}
-                  onChange={handleInputChange}
+                  formValues={formValues}
+                  onChange={(e) => handleInputChange(e, true)}
                   className={`w-full p-2 border rounded-md ${isEditable ? "bg-white" : "bg-user-detail-box cursor-not-allowed"}`} disabled={!isEditable}
                   formErrors={formErrors}
                   showErrors={true} showLabel={true}
@@ -282,8 +273,8 @@ const UserListPage = () => {
                 <FormInput
                   name="location"
                   placeholder="Location"
-                  value={formValues.location}
-                  onChange={handleInputChange}
+                  formValues={formValues}
+                  onChange={(e) => handleInputChange(e, true)}
                   className={`w-full p-2 border rounded-md ${isEditable ? "bg-white" : "bg-user-detail-box cursor-not-allowed"}`} disabled={!isEditable}
                   formErrors={formErrors}
                   showErrors={true} showLabel={true}
@@ -292,8 +283,8 @@ const UserListPage = () => {
                 <FormInput
                   name="userRole"
                   placeholder="Role"
-                  value={formValues.userRole}
-                  onChange={handleInputChange}
+                  formValues={formValues}
+                  onChange={(e) => handleInputChange(e, true)}
                   className={`w-full p-2 border rounded-md ${isEditable ? "bg-white" : "bg-user-detail-box cursor-not-allowed"}`}
                   disabled={!isEditable}
                   formErrors={formErrors}
