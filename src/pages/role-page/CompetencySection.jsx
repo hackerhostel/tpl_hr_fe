@@ -3,8 +3,9 @@ import {
     CheckBadgeIcon,
     ChevronLeftIcon,
     ChevronRightIcon,
-    EllipsisVerticalIcon,
+    PencilIcon,
     PlusCircleIcon,
+    TrashIcon,
     XMarkIcon
 } from "@heroicons/react/24/outline/index.js";
 import axios from "axios";
@@ -94,13 +95,10 @@ const CompetencySection = ({
     };
 
     const GenerateRow = ({competency}) => {
-        const subTaskId = competency?.id
-        const editStatus = competency?.attributes?.status
-
         const initialData = {
             name: competency?.name,
-            status: 1,
-            assignee: 1
+            description: competency?.description,
+            proficiencyID: competency?.proficiencyID,
         }
 
         const [isEditing, setIsEditing] = useState(false);
@@ -115,65 +113,37 @@ const CompetencySection = ({
             setEditRow(initialData)
         }
 
-        const handleUpdateTask = async () => {
-            const payloads = [];
+        const handleUpdateCompetency = async () => {
+            try {
+                const response = await axios.put(`designations/${roleId}/competencies/${competency?.id}`, {competency: editRow})
+                const updated = response?.status
 
-            if (editRow.name !== initialData.name) {
-                if (editRow.name.trim() === '') {
-                    addToast('Name is required', {appearance: 'warning'});
-                    return;
+                if (updated) {
+                    addToast('Competency Successfully Updated', {appearance: 'success'});
+                    reFetchRole()
+                } else {
+                    addToast('Failed To Update The Competency', {appearance: 'error'});
                 }
-                payloads.push({
-                    taskID: subTaskId,
-                    type: "TASK",
-                    attributeDetails: {
-                        attributeKey: "Name",
-                        attributeValue: editRow.name,
-                    },
-                });
+            } catch (error) {
+                console.log(error)
+                addToast('Failed To Update The Competency', {appearance: 'error'});
             }
+        };
 
-            if (editRow.assignee !== initialData.assignee) {
-                payloads.push({
-                    taskID: subTaskId,
-                    type: "TASK",
-                    attributeDetails: {
-                        attributeKey: "assigneeID",
-                        attributeValue: editRow.assignee,
-                    },
-                });
-            }
+        const handleDeleteCompetency = async () => {
+            try {
+                const response = await axios.delete(`designations/${roleId}/competencies/${competency?.id}`)
+                const deleted = response?.status
 
-            if (editRow.status !== initialData.status) {
-                if (!editStatus?.attributeId || !editStatus?.fieldID) {
-                    addToast('Invalid status update details', {appearance: 'warning'});
-                    return;
+                if (deleted) {
+                    addToast('Competency Successfully Deleted', {appearance: 'success'});
+                    reFetchRole()
+                } else {
+                    addToast('Failed To Delete The Competency', {appearance: 'error'});
                 }
-                payloads.push({
-                    taskID: subTaskId,
-                    type: "TASK_ATTRIBUTE",
-                    attributeDetails: {
-                        attributeKey: editStatus.attributeId,
-                        taskFieldID: editStatus.fieldID,
-                        attributeValue: editRow.status,
-                    },
-                });
-            }
-
-            if (payloads.length) {
-                try {
-                    await Promise.all(
-                        payloads.map(payload => axios.put(`/tasks/${subTaskId}`, payload))
-                    );
-                    addToast('Sub task successfully updated', {appearance: 'success'});
-                    setIsEditing(false);
-                    // refetchTask(true);
-                } catch (error) {
-                    console.error('Error updating sub task:', error);
-                    addToast('Failed to update the sub task', {appearance: 'error'});
-                }
-            } else {
-                addToast('No changes to update', {appearance: 'warning'});
+            } catch (error) {
+                console.log(error)
+                addToast('Failed To Delete The Competency', {appearance: 'error'});
             }
         };
 
@@ -187,9 +157,14 @@ const CompetencySection = ({
                         <td className="px-4 py-5">
                             <div className={"flex gap-5"}>
                                 <div className="cursor-pointer"
-                                    // onClick={() => setIsEditing(true)}
+                                     onClick={() => setIsEditing(true)}
                                 >
-                                    <EllipsisVerticalIcon className={"w-5 h-5 text-secondary-grey cursor-pointer"}/>
+                                    <PencilIcon className={"w-5 h-5 text-secondary-grey cursor-pointer"}/>
+                                </div>
+                                <div className="cursor-pointer"
+                                     onClick={() => handleDeleteCompetency()}
+                                >
+                                    <TrashIcon className={"w-5 h-5 text-secondary-grey cursor-pointer"}/>
                                 </div>
                             </div>
                         </td>
@@ -207,22 +182,22 @@ const CompetencySection = ({
                         <td className="px-4 py-5">
                             <FormInput
                                 type="text"
-                                name="name"
-                                formValues={{name: editRow.name}}
+                                name="description"
+                                formValues={{description: editRow.description}}
                                 onChange={({target: {name, value}}) => handleEditFormChange(name, value, true)}
                             />
                         </td>
                         <td className="px-4 py-5">
-                            <FormInput
-                                type="text"
-                                name="name"
-                                formValues={{name: editRow.name}}
-                                onChange={({target: {name, value}}) => handleEditFormChange(name, value, true)}
+                            <FormSelect
+                                name="proficiencyID"
+                                formValues={{proficiencyID: editRow.proficiencyID}}
+                                options={getSelectOptions(proficiencyLevels)}
+                                onChange={({target: {name, value}}) => handleEditFormChange(name, value, false)}
                             />
                         </td>
                         <td className="px-4 py-5">
                             <div className={"flex gap-5"}>
-                                <div className={"cursor-pointer"} onClick={handleUpdateTask}>
+                                <div className={"cursor-pointer"} onClick={handleUpdateCompetency}>
                                     <CheckBadgeIcon className={"w-6 h-6 text-pink-700"}/>
                                 </div>
                                 <div className={"cursor-pointer"} onClick={onHideEdit}>
