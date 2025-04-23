@@ -1,36 +1,36 @@
 import React, { useEffect, useState } from "react";
 import {
     CheckBadgeIcon,
+    EllipsisVerticalIcon,
     PlusCircleIcon,
-    XMarkIcon,
+    ChevronLeftIcon,
+    ChevronRightIcon,
     PencilIcon,
     TrashIcon,
-    ChevronLeftIcon,
-    ChevronRightIcon
+    XMarkIcon,
 } from "@heroicons/react/24/outline";
 import FormInput from "../FormInput";
 import { useToasts } from "react-toast-notifications";
 import axios from "axios";
 
-const GoalsSection = ({ goals = [], refetchGoals }) => {
+const statusMap = {
+    1: "Not Started",
+    2: "In Progress",
+    3: "Completed"
+};
+
+const GoalsSection = ({ refetchGoals }) => {
     const { addToast } = useToasts();
 
-    const [goalList, setGoalList] = useState(goals);
+    const [goalList, setGoalList] = useState([]);
+      const [showActionsId, setShowActionsId] = useState(null);
     const [addingNew, setAddingNew] = useState(false);
-    const [newGoal, setNewGoal] = useState({ name: "", targetDate: "", progress: "", comments: "" });
+    const [newGoal, setNewGoal] = useState({ name: "", targetDate: "", statusID: "", comments: "", planID: "" });
     const [editingGoalId, setEditingGoalId] = useState(null);
     const [editGoalData, setEditGoalData] = useState({});
 
     const [currentPage, setCurrentPage] = useState(1);
     const rowsPerPage = 5;
-
-    useEffect(() => {
-      const isDifferent = JSON.stringify(goals) !== JSON.stringify(goalList);
-      if (isDifferent) {
-          setGoalList(goals);
-      }
-  }, [goals]);
-  
 
     const totalPages = Math.ceil(goalList.length / rowsPerPage);
     const indexOfLast = currentPage * rowsPerPage;
@@ -46,56 +46,55 @@ const GoalsSection = ({ goals = [], refetchGoals }) => {
         }
     };
 
+    const fetchGoals = async () => {
+        try {
+            const whoamiRes = await axios.get("/employees/who-am-i");
+            const employeeID = whoamiRes?.data?.body?.userDetails?.id;
+
+            const res = await axios.get(`/employees/${employeeID}`);
+            const goals = res?.data?.body?.goals || [];
+
+            console.log("Fetched goals:", goals);
+            setGoalList(goals);
+        } catch (error) {
+            console.error("Failed to fetch goals:", error?.response?.data || error.message);
+        }
+    };
+
+    useEffect(() => {
+        fetchGoals();
+    }, []);
+
     const handleAddGoal = async () => {
         if (!newGoal.name || !newGoal.targetDate) {
             addToast("Name and Target Date are required", { appearance: "warning" });
             return;
         }
-    
+
         try {
-            // Step 1: Get current employee info
             const whoamiRes = await axios.get("/employees/who-am-i");
             const employeeID = whoamiRes?.data?.body?.userDetails?.id;
             const email = whoamiRes?.data?.body?.userDetails?.email;
-    
-            if (!employeeID || !email) {
-                addToast("Failed to retrieve employee details", { appearance: "error" });
-                return;
-            }
-    
-            // Step 2: Validate and convert planID to number
-            const planID = parseInt(newGoal.planID);
-            if (isNaN(planID)) {
-                addToast("Invalid Development Plan selected", { appearance: "warning" });
-                return;
-            }
-    
-            // Step 3: Prepare and send goal creation
+
             const payload = {
                 goal: {
                     name: newGoal.name,
-                    planID: planID,
+                    planID: parseInt(newGoal.planID),
                     targetDate: newGoal.targetDate,
                     comments: newGoal.comments,
-                    statusID: parseInt(newGoal.progress) || 1,
+                    statusID: parseInt(newGoal.statusID) || 1,
                     employeeID: employeeID,
                 },
                 createdBy: email
             };
-    
+
             const response = await axios.post(`/employees/${employeeID}/goals`, payload);
-    
+
             if (response?.data?.goalID) {
                 addToast("Goal added successfully", { appearance: "success" });
-                refetchGoals();
                 setAddingNew(false);
-                setNewGoal({
-                    name: "",
-                    targetDate: "",
-                    progress: "",
-                    comments: "",
-                    planID: null // 
-                });
+                setNewGoal({ name: "", targetDate: "", statusID: "", comments: "", planID: "" });
+                fetchGoals();
             } else {
                 throw new Error("Goal ID not returned");
             }
@@ -104,32 +103,56 @@ const GoalsSection = ({ goals = [], refetchGoals }) => {
             addToast("Failed to add goal", { appearance: "error" });
         }
     };
-    
-  
-  
-  
 
     const handleEditGoal = async (goalId) => {
         try {
-            const response = await axios.put(`/goals/${goalId}`, editGoalData); // Replace with actual API
-            if (response?.data?.success) {
+            const whoamiRes = await axios.get("/employees/who-am-i");
+            const employeeID = whoamiRes?.data?.body?.userDetails?.id;
+            const email = whoamiRes?.data?.body?.userDetails?.email;
+
+            const payload = {
+                goal: {
+                    ...editGoalData,
+                    employeeID: employeeID,
+                    planID: parseInt(editGoalData.planID),
+                    statusID: parseInt(editGoalData.statusID),
+                },
+                updatedBy: email
+            };
+
+            const response = await axios.put(`/employees/${employeeID}/goals/${goalId}`, payload);
+
+            console.log("Edit Goal Response:", response); // <-- this will show us the truth
+
+            // TEMPORARY: just check for status code for now
+            if (response?.status === 200) {
                 addToast("Goal updated successfully", { appearance: "success" });
-                refetchGoals();
                 setEditingGoalId(null);
+                fetchGoals();
+            } else {
+                throw new Error("Update response didn't indicate success");
             }
         } catch (err) {
+            console.error("Edit Goal Error:", err);
             addToast("Failed to update goal", { appearance: "error" });
         }
     };
 
+
+
+
     const handleDeleteGoal = async (goalId) => {
         try {
-            const response = await axios.delete(`/goals/${goalId}`); // Replace with actual API
+            const whoamiRes = await axios.get("/employees/who-am-i");
+            const employeeID = whoamiRes?.data?.body?.userDetails?.id;
+
+            const response = await axios.delete(`/employees/${employeeID}/goals/${goalId}`);
             if (response?.data?.success) {
                 addToast("Goal deleted successfully", { appearance: "success" });
-                refetchGoals();
+                fetchGoals();
             }
         } catch (err) {
+            console.error("Delete Goal Error:", err);
             addToast("Failed to delete goal", { appearance: "error" });
         }
     };
@@ -139,10 +162,10 @@ const GoalsSection = ({ goals = [], refetchGoals }) => {
             <div className="flex justify-between mb-4">
                 <span className="text-lg text-text-color">Goals</span>
                 {!addingNew && (
-                       <div className="flex items-center space-x-2 text-text-color cursor-pointer" onClick={() => setAddingNew(true)}>
-                       <PlusCircleIcon className="w-5 text-text-color" />
-                       <span>Add New</span>
-                     </div>
+                    <div className="flex items-center space-x-2 text-text-color cursor-pointer" onClick={() => setAddingNew(true)}>
+                        <PlusCircleIcon className="w-5 text-text-color" />
+                        <span>Add New</span>
+                    </div>
                 )}
             </div>
             <table className="table-auto w-full border-collapse">
@@ -150,17 +173,16 @@ const GoalsSection = ({ goals = [], refetchGoals }) => {
                     <tr className="text-left text-secondary-grey border-b border-gray-200">
                         <th className="py-3 px-4">Name</th>
                         <th className="py-3 px-4">Target Date</th>
-                        <th className="py-3 px-4">Progress</th>
+                        <th className="py-3 px-4">Status</th>
                         <th className="py-3 px-4">Comments</th>
-                        <th className="py-3 px-4">plan id</th>
+                        <th className="py-3 px-4">Plan ID</th>
                         <th className="py-3 px-4">Actions</th>
-                        
                     </tr>
                 </thead>
                 <tbody>
                     {addingNew && (
                         <tr className="border-b border-gray-200">
-                            {["name", "targetDate", "progress", "comments", "planID"].map((field) => (
+                            {["name", "targetDate", "statusID", "comments", "planID"].map((field) => (
                                 <td className="px-4 py-3" key={field}>
                                     <FormInput
                                         type={field === "targetDate" ? "date" : "text"}
@@ -175,7 +197,7 @@ const GoalsSection = ({ goals = [], refetchGoals }) => {
                                 <XMarkIcon
                                     onClick={() => {
                                         setAddingNew(false);
-                                        setNewGoal({ name: "", targetDate: "", progress: "", comments: "", planID: "" });
+                                        setNewGoal({ name: "", targetDate: "", statusID: "", comments: "", planID: "" });
                                     }}
                                     className="w-5 h-5 text-red-600 cursor-pointer"
                                 />
@@ -186,7 +208,7 @@ const GoalsSection = ({ goals = [], refetchGoals }) => {
                         <tr className="border-b border-gray-200" key={goal.id}>
                             {editingGoalId === goal.id ? (
                                 <>
-                                    {["name", "targetDate", "progress", "comments", "planID"].map((field) => (
+                                    {["name", "targetDate", "statusID", "comments", "planID"].map((field) => (
                                         <td className="px-4 py-3" key={field}>
                                             <FormInput
                                                 type={field === "targetDate" ? "date" : "text"}
@@ -210,21 +232,43 @@ const GoalsSection = ({ goals = [], refetchGoals }) => {
                             ) : (
                                 <>
                                     <td className="px-4 py-3">{goal.name}</td>
-                                    <td className="px-4 py-3">{goal.targetDate}</td>
-                                    <td className="px-4 py-3">{goal.progress}</td>
+                                    <td className="px-4 py-3">{goal.targetDate?.split("T")[0]}</td>
+                                    <td className="px-4 py-3">{statusMap[goal.statusID] || "Unknown"}</td>
                                     <td className="px-4 py-3">{goal.comments}</td>
+                                    <td className="px-4 py-3">{goal.planID}</td>
                                     <td className="px-4 py-3 flex gap-3">
-                                        <PencilIcon
-                                            onClick={() => {
-                                                setEditingGoalId(goal.id);
-                                                setEditGoalData(goal);
-                                            }}
-                                            className="w-5 h-5 text-blue-600 cursor-pointer"
-                                        />
-                                        <TrashIcon
-                                            onClick={() => handleDeleteGoal(goal.id)}
-                                            className="w-5 h-5 text-red-600 cursor-pointer"
-                                        />
+                                        {showActionsId === goal.id ? (
+                                            <div className="flex gap-3">
+                                                <PencilIcon
+                                                    className="w-5 h-5 text-text-color cursor-pointer"
+                                                    onClick={() => {
+                                                        setEditGoalData({
+                                                            name: goal.name || "",
+                                                            targetDate: goal.targetDate.split("T")[0] || "",
+                                                            statusID: goal.statusID || "",
+                                                            comments: goal.comments || "",
+                                                            planID: goal.planID || ""
+                                                        });
+                                                        setEditingGoalId(goal.id);
+                                                        setShowActionsId(null);
+                                                    }}
+                                                />
+
+                                                <TrashIcon
+                                                    className="w-5 h-5 text-text-color cursor-pointer"
+                                                    onClick={() => handleDeleteCertification(goal.id)}
+                                                />
+                                                <XMarkIcon
+                                                    className="w-5 h-5 text-text-color cursor-pointer"
+                                                    onClick={() => setShowActionsId(null)}
+                                                />
+                                            </div>
+                                        ) : (
+                                            <EllipsisVerticalIcon
+                                                className="w-5 h-5 text-text-color cursor-pointer"
+                                                onClick={() => setShowActionsId(goal.id)}
+                                            />
+                                        )}
                                     </td>
                                 </>
                             )}
