@@ -11,6 +11,7 @@ import releaseReducer from "./slice/releaseSlice.js";
 import platformReducer from "./slice/platformSlice.js";
 import testCaseReducer from "./slice/testCaseSlice.js";
 import roleReducer from "./slice/roleSlice.js";
+import masterDataReducer from "./slice/masterDataSlice.js";
 
 export const store = configureStore({
   reducer: {
@@ -25,6 +26,7 @@ export const store = configureStore({
     release: releaseReducer,
     platform: platformReducer,
     testCase: testCaseReducer,
-    role: roleReducer
+    role: roleReducer,
+    masterData: masterDataReducer,
   },
 });
