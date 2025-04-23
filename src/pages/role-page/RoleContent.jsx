@@ -1,8 +1,6 @@
 import React, {useEffect, useRef, useState} from "react";
 import FormInput from "../../components/FormInput";
 import WYSIWYGInput from "../../components/WYSIWYGInput";
-import {PlusCircleIcon, TrashIcon, XMarkIcon} from "@heroicons/react/24/outline";
-import DataGrid, {Column, Paging, Scrolling, Sorting} from "devextreme-react/data-grid";
 import "./custom-styles.css";
 import {doGetRoles, selectSelectedRole} from "../../state/slice/roleSlice.js";
 import {useDispatch, useSelector} from "react-redux";
@@ -10,16 +8,21 @@ import axios from 'axios';
 import {useToasts} from "react-toast-notifications";
 import KPISection from "./KPISection.jsx";
 import useFetchRole from "../../hooks/custom-hooks/role/useFetchRole.jsx";
+import CompetencySection from "./CompetencySection.jsx";
+import {selectAppConfig} from "../../state/slice/appSlice.js";
 
 const RoleContent = () => {
     const selectedRole = useSelector(selectSelectedRole)
+    const appConfig = useSelector(selectAppConfig)
     const {addToast} = useToasts();
     const dispatch = useDispatch();
 
     const [role, setRole] = useState({});
     const [description, setDescription] = useState('');
     const [responsibilities, setResponsibilities] = useState('');
-    const [kpis, setKPIs] = useState({});
+    const [kpis, setKPIs] = useState([]);
+    const [competencies, setCompetencies] = useState([]);
+    const [proficiencyLevels, setProficiencyLevels] = useState([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const {
@@ -37,7 +40,16 @@ const RoleContent = () => {
         if (roleResponse?.kpi && roleResponse?.kpi.length) {
             setKPIs(roleResponse?.kpi)
         }
+        if (roleResponse?.competencies && roleResponse?.competencies.length) {
+            setCompetencies(roleResponse?.competencies)
+        }
     }, [roleResponse]);
+
+    useEffect(() => {
+        if (appConfig?.proficiencyLevels && appConfig?.proficiencyLevels.length) {
+            setProficiencyLevels(appConfig?.proficiencyLevels)
+        }
+    }, [appConfig]);
 
     useEffect(() => {
         if (selectedRole?.id) {
@@ -51,80 +63,6 @@ const RoleContent = () => {
             setResponsibilities(selectedRole?.responsibilities)
         }
     }, [selectedRole]);
-
-    const [filteredCompetencies, setFilteredCompetencies] = useState([]);
-    const [editRowId, setEditRowId] = useState(null);
-    const [menuOpenId, setMenuOpenId] = useState(null);
-    const menuRefs = useRef(new Map());
-    const [newRow, setNewRow] = useState(null);
-
-    // Dummy Competencies Data
-    const dummyCompetencies = [
-        {id: 1, name: "Leadership", description: "Ability to lead teams", proficiencyLevel: "Expert"},
-        {
-            id: 2,
-            name: "Communication",
-            description: "Effective verbal and written skills",
-            proficiencyLevel: "Advanced"
-        },
-    ];
-
-    const handleAddNew = (table) => {
-        setNewRow({
-            table,
-            data: {
-                id: Date.now(),
-                name: "",
-                description: "",
-                proficiencyLevel: table === "Competencies" ? "" : undefined,
-                formula: table === "KPIs" ? "" : undefined,
-                evaluationCriteria: table === "KPIs" ? "" : undefined,
-                targetMetrics: table === "KPIs" ? "" : undefined,
-            },
-        });
-    };
-
-    const handleEditChange = (e, field) => {
-        if (newRow) {
-            setNewRow({
-                ...newRow,
-                data: {...newRow.data, [field]: e.target.value},
-            });
-        }
-    };
-
-    const handleSaveNew = () => {
-        if (!newRow?.data.name) return;
-        setFilteredCompetencies([...filteredCompetencies, newRow.data]);
-        setNewRow(null);
-    };
-
-    const handleCancelNew = () => {
-        setNewRow(null);
-    };
-
-    const handleDelete = (id, table) => {
-        setFilteredCompetencies(filteredCompetencies.filter(comp => comp.id !== id));
-    };
-
-    useEffect(() => {
-        setFilteredCompetencies(dummyCompetencies);
-
-        const handleClickOutside = (event) => {
-            if (![...menuRefs.current.values()].some((ref) => ref?.contains(event.target))) {
-                setMenuOpenId(null);
-            }
-        };
-
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
-
-
-    const handleEdit = (id) => {
-        setEditRowId(id);
-        setMenuOpenId(null);
-    };
 
     const updateRole = async (event) => {
         setIsSubmitting(true)
@@ -201,53 +139,8 @@ const RoleContent = () => {
                 <KPISection kpis={kpis} roleId={role?.id} reFetchRole={reFetchRole}/>
 
                 {/* Competencies Table */}
-                <div className="bg-white">
-                    <div className="flex items-center justify-between p-4">
-                        <p className="text-secondary-grey text-lg font-medium">Competencies
-                            ({filteredCompetencies.length})</p>
-                        <button className="flex items-center space-x-2 text-text-color cursor-pointer"
-                                onClick={() => handleAddNew("Competencies")}>
-                            <PlusCircleIcon className="w-5 text-text-color"/>
-                            <span>Add New</span>
-                        </button>
-                    </div>
-
-                    <DataGrid
-                        dataSource={[...filteredCompetencies, ...(newRow?.table === "Competencies" ? [newRow.data] : [])]}
-                        allowColumnReordering showBorders={false} width="100%"
-                        className="rounded-lg overflow-hidden">
-                        <Scrolling columnRenderingMode="virtual"/>
-                        <Sorting mode="multiple"/>
-                        <Paging enabled pageSize={4}/>
-
-                        {["name", "description", "proficiencyLevel"].map((field) => (
-                            <Column key={field} dataField={field}
-                                    caption={field.charAt(0).toUpperCase() + field.slice(1)}
-                                    width={330}
-                                    cellRender={(data) => newRow?.data.id === data.data.id ?
-                                        <FormInput type="text" name={field} value={newRow.data[field]}
-                                                   onChange={(e) => handleEditChange(e, field)}/>
-                                        : data.value}
-                            />
-                        ))}
-
-                        <Column caption="Actions" width={100} cellRender={(data) => (
-                            newRow?.data.id === data.data.id ? (
-                                <div className="flex space-x-2">
-                                    <button onClick={handleSaveNew}><CheckIcon className="w-5 h-5 text-green-500"/>
-                                    </button>
-                                    <button onClick={handleCancelNew}><XMarkIcon className="w-5 h-5 text-red-500"/>
-                                    </button>
-                                </div>
-                            ) : (
-                                <button className="p-2 text-text-color cursor-pointer"
-                                        onClick={() => handleDelete(data.data.id, "Competencies")}>
-                                    <TrashIcon className="w-5 h-5"/>
-                                </button>
-                            )
-                        )}/>
-                    </DataGrid>
-                </div>
+                <CompetencySection competencies={competencies} roleId={role?.id} reFetchRole={reFetchRole}
+                                   proficiencyLevels={proficiencyLevels}/>
             </div>
         ) : (
             <div style={{width: "99%"}} className="flex flex-col space-y-8 bg-slate-100 text-center p-10 ">
