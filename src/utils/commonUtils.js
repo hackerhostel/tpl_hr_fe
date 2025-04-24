@@ -40,6 +40,17 @@ export const getSelectOptions = (options) => {
   }
 };
 
+export const getSelectOptionsForPR = (options) => {
+  if (options && options.length) {
+    return options.map(o => ({
+      value: o?.departmentID ? Number(o?.departmentID) : o?.EmployeeID ? Number(o?.EmployeeID) : Number(o?.id),
+      label: o?.periodName || o?.departmentName || o?.EmployeeName
+    }));
+  } else {
+    return []
+  }
+};
+
 
 export const getUserSelectOptions = (options) => {
   return options.map(o => ({value: Number(o.id), label: `${o.firstName} ${o.lastName}`}));
