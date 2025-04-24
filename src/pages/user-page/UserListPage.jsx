@@ -420,30 +420,37 @@ const UserListPage = () => {
                   showLabel={true}
                 />
 
-
                 <FormInput
                   name="departmentID"
                   placeholder="Department"
                   formValues={formValues}
                   onChange={(e) => handleInputChange(e, true)}
-                  className={`w-full p-2 border rounded-md ${isEditable ? "bg-white" : "bg-user-detail-box cursor-not-allowed"}`} disabled={!isEditable}
+                  className={`w-full p-2 border rounded-md ${isEditable ? "bg-white" : "bg-user-detail-box cursor-not-allowed"}`}
+                  disabled={!isEditable}
                   formErrors={formErrors}
-                  showErrors={true} showLabel={true}
+                  showErrors={true}
+                  showLabel={true}
                 />
 
-
-                <FormSelect name="reportedTo" options={userOptions} value={selectedUser?.id || ""} onChange={handleUserChange} placeholder="Reported To" />
+                <FormSelect
+                  name="reportedTo"
+                  options={userOptions}
+                  value={selectedUser?.id || ""}
+                  onChange={handleUserChange}
+                  placeholder="Reported To"
+                />
 
                 <FormInput
                   name="hiredDate"
                   placeholder="Hired Date"
                   formValues={formValues}
                   onChange={(e) => handleInputChange(e, true)}
-                  className={`w-full p-2 border rounded-md ${isEditable ? "bg-white" : "bg-user-detail-box cursor-not-allowed"}`} disabled={!isEditable}
+                  className={`w-full p-2 border rounded-md ${isEditable ? "bg-white" : "bg-user-detail-box cursor-not-allowed"}`}
+                  disabled={!isEditable}
                   formErrors={formErrors}
-                  showErrors={true} showLabel={true}
+                  showErrors={true}
+                  showLabel={true}
                 />
-
 
                 <FormInput
                   name="location"
