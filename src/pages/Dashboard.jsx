@@ -7,7 +7,7 @@ import React, {useEffect} from "react";
 import {doGetWhoAmI, selectInitialUserDataError, selectInitialUserDataLoading} from "../state/slice/authSlice.js";
 import LoadingPage from "./LoadingPage.jsx";
 import ServiceDownPage from "./ServiceDownPage.jsx";
-import TestPlanLayout from "./test-plan-page/TestSuiteContentPage.jsx";
+import PerformanceLayout from "./performance-page/PerformanceContentPage.jsx";
 import DashboardLayout from "./dashboard-page/index.jsx";
 import {doGetProjectBreakdown, selectSelectedProject} from "../state/slice/projectSlice.js";
 import {isNotEmptyObj} from "../utils/commonUtils.js";
@@ -55,11 +55,11 @@ const Dashboard = () => {
             </Route>
 
             <Route path="/test-plans/:test_plan_id">
-              <TestPlanLayout/>
+              <PerformanceLayout/>
             </Route>
 
             <Route path="/test-plans">
-              <TestPlanLayout/>
+              <PerformanceLayout/>
             </Route>
 
 
