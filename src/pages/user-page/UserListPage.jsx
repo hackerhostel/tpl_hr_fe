@@ -398,12 +398,8 @@ const UserListPage = () => {
                   label="Email"
                   formValues={formValues}
                   onChange={(e) => handleInputChange(e, true)}
-                  className={`w-full p-2 border rounded-md ${
-                    isEditable
-                      ? "bg-white"
-                      : "bg-user-detail-box cursor-not-allowed"
-                  }`}
-                  disabled={!isEditable}
+                  className="w-full p-2 border rounded-md bg-user-detail-box cursor-not-allowed"
+                  disabled={true}
                   formErrors={formErrors}
                   showErrors={true}
                   showLabel={true}
