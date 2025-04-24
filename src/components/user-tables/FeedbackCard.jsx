@@ -10,6 +10,12 @@ const FeedbackPopup = ({ isOpen, onClose, onAddFeedback }) => {
   const [comments, setComments] = useState("");
   const [rating, setRating] = useState(0);
 
+  const [formValues, setFormValues] = useState({
+    feedbackTypeID: "",
+    comments: "",
+  });
+
+
 
   useEffect(() => {
     const fetchFeedbacks = async () => {
@@ -17,26 +23,24 @@ const FeedbackPopup = ({ isOpen, onClose, onAddFeedback }) => {
         // Get logged-in employee ID
         const whoamiRes = await axios.get("/employees/who-am-i");
         const employeeID = whoamiRes?.data?.body?.userDetails?.id;
-  
+
         // Get feedbacks for the employee
         const res = await axios.get(`/employees/${employeeID}`);
         const feedbackList = res?.data?.body?.feedback || [];
-  
-        console.log("Raw feedback list from API:", feedbackList);
-  
+
+       
+
         // Get employee list for name mapping
         const employeeRes = await axios.get(`/organizations/employees`);
         const employees = employeeRes.data.body;
-        console.log("employees", employees);
-  
+
+
         // Format feedbacks
         const formatted = feedbackList.map((f) => {
           const creator = employees.find((e) => e.id === f.createdBy);
           const creatorName = creator ? `${creator.firstName} ${creator.lastName}` : "Unknown";
 
-          
-  console.log(`Feedback ID: ${f.id}, createdBy: ${f.createdBy}, Creator Name: ${creatorName}`);
-  
+
           return {
             id: f.id,
             name: creatorName, // <- this now shows who gave the feedback
@@ -46,36 +50,36 @@ const FeedbackPopup = ({ isOpen, onClose, onAddFeedback }) => {
             feedback: f.comments,
           };
         });
-  
-        console.log("Formatted feedback data:", formatted);
-  
+
+
         setFeedbackData(formatted);
       } catch (error) {
         console.error("Failed to fetch feedbacks:", error?.response?.data || error.message);
       }
     };
-  
+
     fetchFeedbacks();
   }, []);
-  
-  
+
+
 
   const handleAddFeedback = async () => {
     try {
       const whoamiRes = await axios.get("/employees/who-am-i");
       const employeeID = whoamiRes?.data?.body?.userDetails?.id;
       const email = whoamiRes?.data?.body?.userDetails?.email;
-      
+
 
 
 
       const payload = {
-        feedbackTypeID: Number(relationship),
-        comments,
+        ...formValues,
+        feedbackTypeID: Number(formValues.feedbackTypeID),
         rating,
         createdBy: email,
         employeeID,
       };
+
 
       const res = await axios.post(`/employees/${employeeID}/feedback`, {
         feedback: payload,
@@ -84,8 +88,8 @@ const FeedbackPopup = ({ isOpen, onClose, onAddFeedback }) => {
       if (res.status === 201) {
         onAddFeedback({
           id: res.data.feedbackID,
-          name: res.data.firstName, // Adjust if your backend returns creator name
-          role: "Contributor", // Or dynamically assign based on feedbackType?
+          name: res.data.firstName,
+          role: "Contributor", 
           date: new Date().toLocaleDateString(),
           rating,
           feedback: comments,
@@ -100,6 +104,15 @@ const FeedbackPopup = ({ isOpen, onClose, onAddFeedback }) => {
       console.error("Error submitting feedback:", error?.response?.data || error.message);
     }
   };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormValues((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
 
   if (!isOpen) return null;
 
@@ -117,10 +130,11 @@ const FeedbackPopup = ({ isOpen, onClose, onAddFeedback }) => {
             <FormInput
               name="feedbackTypeID"
               label="Feedback Type"
-              value={relationship}
-              onChange={(e) => setRelationship(e.target.value)}
+              formValues={formValues}
+              onChange={handleChange}
               type="number"
             />
+
           </div>
 
           <div className="mt-3">
@@ -140,12 +154,13 @@ const FeedbackPopup = ({ isOpen, onClose, onAddFeedback }) => {
         <div className="mt-3">
           <label className="text-sm font-medium text-gray-600">Comment</label>
           <FormTextArea
+            name="comments"
             className="w-full mt-1"
             rows="3"
-            name="comments"
-            value={comments}
-            onChange={(e) => setComments(e.target.value)}
+            value={formValues.comments}
+            onChange={handleChange}
           />
+
         </div>
 
         <button className="mt-4 bg-orange-500 text-white w-full py-2 rounded" onClick={handleAddFeedback}>
@@ -167,19 +182,19 @@ const FeedbackCard = () => {
       try {
         const whoamiRes = await axios.get("/employees/who-am-i");
         const employeeID = whoamiRes?.data?.body?.userDetails?.id;
-  
+
         // Fetch feedbacks
         const res = await axios.get(`/employees/${employeeID}`);
         const feedbackList = res?.data?.body?.feedback || [];
-  
+
         // Fetch employee list
         const employeeRes = await axios.get(`/organizations/employees`);
         const employees = employeeRes.data.body;
-  
+
         const formatted = feedbackList.map((f) => {
           const creator = employees.find((e) => e.id === f.createdBy);
           const creatorName = creator ? `${creator.firstName} ${creator.lastName}` : "Unknown";
-  
+
           return {
             id: f.id,
             name: creatorName,
@@ -189,16 +204,16 @@ const FeedbackCard = () => {
             feedback: f.comments,
           };
         });
-  
+
         setFeedbackData(formatted);
       } catch (error) {
         console.error("Failed to fetch feedbacks:", error?.response?.data || error.message);
       }
     };
-  
+
     fetchFeedbacks();
   }, []);
-  
+
 
   const getRelationshipName = (typeID) => {
     const types = {
@@ -291,9 +306,8 @@ const FeedbackCard = () => {
             <button
               onClick={handleNext}
               disabled={currentIndex === feedbackData.length - 1}
-              className={`px-2 py-1 rounded ${
-                currentIndex === feedbackData.length - 1 ? "text-gray-300" : "text-gray-600 hover:bg-gray-100"
-              }`}
+              className={`px-2 py-1 rounded ${currentIndex === feedbackData.length - 1 ? "text-gray-300" : "text-gray-600 hover:bg-gray-100"
+                }`}
             >
               {">"}
             </button>

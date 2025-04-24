@@ -419,104 +419,32 @@ const UserListPage = () => {
                   showErrors={true}
                   showLabel={true}
                 />
-                {isEditable ? (
-                  <FormSelect
-                    name="departmentID"
-                    options={departments.map((d) => ({
-                      label: d.name,
-                      value: String(d.id),
-                    }))}
-                    value={String(formValues.departmentID)}
-                    onChange={(e) => {
-                      const dept = departments.find(
-                        (d) => String(d.id) === String(e.target.value)
-                      );
-                      setFormValues((prev) => ({
-                        ...prev,
-                        departmentID: e.target.value,
-                        departmentName: dept ? dept.name : e.target.value,
-                      }));
-                    }}
-                    placeholder="Department"
-                  />
-                ) : (
-                  <FormInput
-                    name="departmentName"
-                    placeholder="Department"
-                    formValues={formValues}
-                    className={`w-full p-2 border rounded-md ${
-                      isEditable
-                        ? "bg-white"
-                        : "bg-user-detail-box cursor-not-allowed"
-                    }`}
-                    disabled={true}
-                    showLabel={true}
-                  />
-                )}
-                {isEditable ? (
-                  <FormSelect
-                    name="reportingManager"
-                    options={userOptions}
-                    value={String(formValues.reportingManager || "")}
-                    onChange={(e) => {
-                      const manager = userOptions.find(
-                        (opt) => String(opt.value) === String(e.target.value)
-                      );
-                      setFormValues((prev) => ({
-                        ...prev,
-                        reportingManager: e.target.value,
-                        reportingManagerName: manager
-                          ? manager.label
-                          : e.target.value,
-                      }));
-                    }}
-                    placeholder="Reported To"
-                  />
-                ) : (
-                  <FormInput
-                    name="reportingManagerName"
-                    placeholder="Reported To"
-                    formValues={formValues}
-                    className={`w-full p-2 border rounded-md ${
-                      isEditable
-                        ? "bg-white"
-                        : "bg-user-detail-box cursor-not-allowed"
-                    }`}
-                    disabled={true}
-                    showLabel={true}
-                  />
-                )}
 
-                {isEditable ? (
-                  <div className="relative">
-                    <FormInput
-                      name="hiredDate"
-                      type="date"
-                      placeholder="Hired Date"
-                      formValues={formValues}
-                      onChange={(e) => handleInputChange(e, true)}
-                      className={`w-full p-2 border rounded-md ${
-                        isEditable
-                          ? "bg-white"
-                          : "bg-user-detail-box cursor-not-allowed"
-                      }`}
-                      disabled={!isEditable}
-                      formErrors={formErrors}
-                      showErrors={true}
-                      showLabel={true}
-                    />
-                  </div>
-                ) : (
-                  <FormInput
-                    name="hiredDate"
-                    placeholder="Hired Date"
-                    type="text"
-                    formValues={formValues}
-                    className="w-full p-2 border rounded-md bg-user-detail-box cursor-not-allowed"
-                    disabled={true}
-                    showLabel={true}
-                  />
-                )}
+
+                <FormInput
+                  name="departmentID"
+                  placeholder="Department"
+                  formValues={formValues}
+                  onChange={(e) => handleInputChange(e, true)}
+                  className={`w-full p-2 border rounded-md ${isEditable ? "bg-white" : "bg-user-detail-box cursor-not-allowed"}`} disabled={!isEditable}
+                  formErrors={formErrors}
+                  showErrors={true} showLabel={true}
+                />
+
+
+                <FormSelect name="reportedTo" options={userOptions} value={selectedUser?.id || ""} onChange={handleUserChange} placeholder="Reported To" />
+
+                <FormInput
+                  name="hiredDate"
+                  placeholder="Hired Date"
+                  formValues={formValues}
+                  onChange={(e) => handleInputChange(e, true)}
+                  className={`w-full p-2 border rounded-md ${isEditable ? "bg-white" : "bg-user-detail-box cursor-not-allowed"}`} disabled={!isEditable}
+                  formErrors={formErrors}
+                  showErrors={true} showLabel={true}
+                />
+
+
                 <FormInput
                   name="location"
                   placeholder="Location"
