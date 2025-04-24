@@ -44,13 +44,6 @@ const CertificationSection = () => {
         dispatch(doGetFormData());
     }, [dispatch]);
 
-    console.log("developmentPlans from Redux:", trainingStatus);
-
-    const handleEditClick = (cert) => {
-        setEditingId(cert.id);
-        setEditRow(cert);
-        setShowActionsId(null);
-    };
 
     const fetchCertifications = async () => {
         try {
@@ -131,13 +124,13 @@ const CertificationSection = () => {
             const whoamiRes = await axios.get("/employees/who-am-i");
             const employeeID = whoamiRes?.data?.body?.userDetails?.id;
 
-            // Remove 'institution' from the payload if it's not part of the backend schema
+
             const { institution, ...updatedCertData } = editCertData;
 
             const payload = {
                 certification: {
                     ...updatedCertData,
-                    institution: editCertData.institution || undefined,  // Only send if present
+                    institution: editCertData.institution || undefined,  
                     employeeID,
                     certificationID
                 }
@@ -223,31 +216,31 @@ const CertificationSection = () => {
                         <tr className="border-b border-gray-200">
                             {["name", "certification", "dueDate", "expireDate", "trainingStatusID", "institution"].map((field) => (
                                 <td className="px-4 py-3" key={field}>
-                                    {["trainingStatusID"].includes(field) ? (
+                                    {field === "trainingStatusID" ? (
                                         <FormSelect
                                             name={field}
-                                            options={getSelectOptions(field === "trainingStatusID")}
-                                            value={getSelectOptions(field === "trainingStatusID").find((option) => option.value === Number(editCertData[field])) || ""}
-                                            onChange={(e) => handleInputChange({
-                                                target: {
-                                                    name: field,
-                                                    value: e.target.value,
-                                                },
-                                            }, true)
+                                            options={getSelectOptions(trainingStatus)}
+                                            value={trainingStatus.find((option) => option.id === Number(newCert[field]))?.id || ""}
+                                            onChange={(e) =>
+                                                handleInputChange(
+                                                    { target: { name: field, value: e.target.value } },
+                                                    false
+                                                )
                                             }
                                             showErrors={false}
                                             required
                                         />
                                     ) : (
                                         <FormInput
-                                            type={field === "targetDate" ? "date" : "text"}
+                                            type={field.includes("Date") ? "date" : "text"}
                                             name={field}
-                                            formValues={{ [field]: editCertData[field] }}
-                                            onChange={(e) => handleInputChange(e, true)}
+                                            formValues={{ [field]: newCert[field] }}
+                                            onChange={(e) => handleInputChange(e, false)}
                                         />
                                     )}
                                 </td>
                             ))}
+
 
                             <td className="px-4 py-3 flex gap-3">
                                 <CheckBadgeIcon onClick={handleAddCertification} className="w-5 h-5 text-green-600 cursor-pointer" />
@@ -278,15 +271,30 @@ const CertificationSection = () => {
                                 {isEditing ? (
                                     <>
                                         {["name", "certification", "dueDate", "expireDate", "trainingStatusID", "institution"].map((field) => (
-                                            <td className="px-4 py-3" key={field}>
-                                                <FormInput
-                                                    type={field.includes("Date") ? "date" : "text"}
-                                                    name={field}
-                                                    formValues={{ [field]: editCertData[field] }}
-                                                    onChange={(e) => handleInputChange(e, true)}
-                                                />
-
-                                            </td>
+                                           <td className="px-4 py-3" key={field}>
+                                           {field === "trainingStatusID" ? (
+                                               <FormSelect
+                                                   name={field}
+                                                   options={getSelectOptions(trainingStatus)}
+                                                   value={trainingStatus.find((option) => option.id === Number(newCert[field]))?.id || ""}
+                                                   onChange={(e) =>
+                                                       handleInputChange(
+                                                           { target: { name: field, value: e.target.value } },
+                                                           false
+                                                       )
+                                                   }
+                                                   showErrors={false}
+                                                   required
+                                               />
+                                           ) : (
+                                               <FormInput
+                                                   type={field.includes("Date") ? "date" : "text"}
+                                                   name={field}
+                                                   formValues={editCertData}
+                                                   onChange={(e) => handleInputChange(e, false)}
+                                               />
+                                           )}
+                                       </td>
                                         ))}
                                         <td className="px-4 py-3 flex gap-3">
                                             <CheckBadgeIcon
@@ -305,7 +313,7 @@ const CertificationSection = () => {
                                         <td className="px-4 py-3">{cert.certification}</td>
                                         <td className="px-4 py-3">{cert.dueDate?.split("T")[0]}</td>
                                         <td className="px-4 py-3">{cert.expireDate?.split("T")[0]}</td>
-                                        <td className="px-4 py-3">{cert.trainingStatusID}</td>
+                                        <td className="px-4 py-3">{trainingStatus.find(ts => ts.id === cert.trainingStatusID)?.name || "—"}</td>
                                         <td className="px-4 py-3">{cert.institution}</td>
                                         <td className="px-4 py-4 relative">
                                             {showActionsId === cert.id ? (

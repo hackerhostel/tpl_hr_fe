@@ -20,8 +20,6 @@ export const doGetMasterData = createAsyncThunk(
       const response = await axios.get("/organizations/master-data");
       const responseData = response.data || {};
 
-      console.log("master data", responseData);
-
       if (responseData) {
         return {
           designations: responseData.designations || [],
@@ -46,14 +44,12 @@ export const doGetFormData = createAsyncThunk(
       const response = await axios.get("/employees/form-data");
       const responseData = response.data?.body;
 
-      console.log("mmm", responseData)
 
       if (responseData) {
         const trainingLevels = responseData.trainingLevels || [];
         const developmentPlans = responseData.developmentPlans || [];
 
-        console.log("trainingLevels:", trainingLevels);
-        console.log("developmentPlans:", developmentPlans);
+       
 
         return { trainingLevels, developmentPlans };
       } else {

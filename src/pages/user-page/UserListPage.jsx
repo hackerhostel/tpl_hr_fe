@@ -261,6 +261,7 @@ const UserListPage = () => {
 
                 <FormInput
                   name="hiredDate"
+                  type="date"
                   placeholder="Hired Date"
                   formValues={formValues}
                   onChange={(e) => handleInputChange(e, true)}
