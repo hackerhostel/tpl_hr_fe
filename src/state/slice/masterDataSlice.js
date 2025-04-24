@@ -1,4 +1,4 @@
- import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 
 const initialState = {
@@ -7,6 +7,8 @@ const initialState = {
   userRoles: [],
   employeeStatuses: [],
   reportingManagers: [],
+  trainingLevels: [],
+  developmentPlans: [],
   isFormDataLoading: false,
   isFormDataLoadingError: false,
 };
@@ -18,7 +20,7 @@ export const doGetMasterData = createAsyncThunk(
       const response = await axios.get("/organizations/master-data");
       const responseData = response.data || {};
 
-      console.log("master data",responseData)
+      console.log("master data", responseData);
 
       if (responseData) {
         return {
@@ -32,6 +34,33 @@ export const doGetMasterData = createAsyncThunk(
       }
     } catch (error) {
       console.log(error);
+      return thunkApi.rejectWithValue(error.message);
+    }
+  }
+);
+
+export const doGetFormData = createAsyncThunk(
+  "masterData/getFormData",
+  async (_, thunkApi) => {
+    try {
+      const response = await axios.get("/employees/form-data");
+      const responseData = response.data?.body;
+
+      console.log("mmm", responseData)
+
+      if (responseData) {
+        const trainingLevels = responseData.trainingLevels || [];
+        const developmentPlans = responseData.developmentPlans || [];
+
+        console.log("trainingLevels:", trainingLevels);
+        console.log("developmentPlans:", developmentPlans);
+
+        return { trainingLevels, developmentPlans };
+      } else {
+        return thunkApi.rejectWithValue("Form data not found");
+      }
+    } catch (error) {
+      console.error("API Error", error);
       return thunkApi.rejectWithValue(error.message);
     }
   }
@@ -90,6 +119,20 @@ export const masterDataSlice = createSlice({
       .addCase(doGetReportingManagers.rejected, (state) => {
         state.isFormDataLoading = false;
         state.isFormDataLoadingError = true;
+      })
+      .addCase(doGetFormData.pending, (state) => {
+        state.isFormDataLoading = true;
+      })
+      .addCase(doGetFormData.fulfilled, (state, action) => {
+        const { trainingLevels, developmentPlans } = action.payload;
+        state.trainingLevels = trainingLevels;
+        state.developmentPlans = developmentPlans;
+        state.isFormDataLoading = false;
+        state.isFormDataLoadingError = false;
+      })
+      .addCase(doGetFormData.rejected, (state) => {
+        state.isFormDataLoading = false;
+        state.isFormDataLoadingError = true;
       });
   },
 });
@@ -99,13 +142,11 @@ export const { clearMasterDataState } = masterDataSlice.actions;
 export const selectDesignations = (state) => state?.masterData?.designations;
 export const selectDepartments = (state) => state?.masterData?.departments;
 export const selectUserRoles = (state) => state?.masterData?.userRoles;
-export const selectEmployeeStatuses = (state) =>
-  state?.masterData?.employeeStatuses;
-export const selectReportingManagers = (state) =>
-  state?.masterData?.reportingManagers;
-export const selectIsFormDataLoading = (state) =>
-  state?.masterData?.isFormDataLoading;
-export const selectIsFormDataLoadingError = (state) =>
-  state?.masterData?.isFormDataLoadingError;
+export const selectTrainingLevels = (state) => state?.masterData?.trainingLevels;
+export const selectDevelopmentPlans = (state) => state?.masterData?.developmentPlans;
+export const selectEmployeeStatuses = (state) => state?.masterData?.employeeStatuses;
+export const selectReportingManagers = (state) => state?.masterData?.reportingManagers;
+export const selectIsFormDataLoading = (state) => state?.masterData?.isFormDataLoading;
+export const selectIsFormDataLoadingError = (state) => state?.masterData?.isFormDataLoadingError;
 
 export default masterDataSlice.reducer;

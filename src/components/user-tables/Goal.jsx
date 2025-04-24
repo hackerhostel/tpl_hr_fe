@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
 import {
     CheckBadgeIcon,
     EllipsisVerticalIcon,
@@ -10,34 +11,27 @@ import {
     XMarkIcon,
 } from "@heroicons/react/24/outline";
 import FormInput from "../FormInput";
+import FormSelect from "../FormSelect"
 import { useToasts } from "react-toast-notifications";
+import { selectEmployeeStatuses, selectTrainingLevels, doGetFormData, selectDevelopmentPlans } from "../../state/slice/masterDataSlice";
 import axios from "axios";
-import {
-    doGetMasterData
-} from "../../state/slice/masterDataSlice"
 
-const statusMap = {
-    1: "Not Started",
-    2: "In Progress",
-    3: "Completed"
-};
-
-useEffect(() => {
-    dispatch(doGetMasterData());
-},[]);
 
 const GoalsSection = ({ refetchGoals }) => {
     const { addToast } = useToasts();
 
     const [goalList, setGoalList] = useState([]);
-      const [showActionsId, setShowActionsId] = useState(null);
+    const [showActionsId, setShowActionsId] = useState(null);
     const [addingNew, setAddingNew] = useState(false);
     const [newGoal, setNewGoal] = useState({ name: "", targetDate: "", statusID: "", comments: "", planID: "" });
     const [editingGoalId, setEditingGoalId] = useState(null);
     const [editGoalData, setEditGoalData] = useState({});
-
+    const employeeStatuses = useSelector(selectEmployeeStatuses);
+    const trainingLevels = useSelector(selectTrainingLevels);
+    const developmentPlans = useSelector(selectDevelopmentPlans);
     const [currentPage, setCurrentPage] = useState(1);
     const rowsPerPage = 5;
+    const dispatch = useDispatch();
 
     const totalPages = Math.ceil(goalList.length / rowsPerPage);
     const indexOfLast = currentPage * rowsPerPage;
@@ -53,6 +47,14 @@ const GoalsSection = ({ refetchGoals }) => {
         }
     };
 
+
+    useEffect(() => {
+        dispatch(doGetFormData());
+    }, [dispatch]);
+
+
+
+
     const fetchGoals = async () => {
         try {
             const whoamiRes = await axios.get("/employees/who-am-i");
@@ -61,7 +63,6 @@ const GoalsSection = ({ refetchGoals }) => {
             const res = await axios.get(`/employees/${employeeID}`);
             const goals = res?.data?.body?.goals || [];
 
-            console.log("Fetched goals:", goals);
             setGoalList(goals);
         } catch (error) {
             console.error("Failed to fetch goals:", error?.response?.data || error.message);
@@ -145,6 +146,17 @@ const GoalsSection = ({ refetchGoals }) => {
         }
     };
 
+    const getSelectOptions = (options, labelKey = "name") => {
+        if (options && options.length) {
+            return options.map((o) => {
+                const value = Number(o?.id || o?.rID || o?.checklistID);
+                const label = o?.[labelKey] || o?.value || o?.title || "Unnamed";
+                return { value, label };
+            });
+        }
+        return [];
+    };
+
 
 
 
@@ -191,14 +203,32 @@ const GoalsSection = ({ refetchGoals }) => {
                         <tr className="border-b border-gray-200">
                             {["name", "targetDate", "statusID", "comments", "planID"].map((field) => (
                                 <td className="px-4 py-3" key={field}>
-                                    <FormInput
-                                        type={field === "targetDate" ? "date" : "text"}
-                                        name={field}
-                                        formValues={{ [field]: newGoal[field] }}
-                                        onChange={(e) => handleInputChange(e)}
-                                    />
+                                    {["statusID", "planID"].includes(field) ? (
+                                        <FormSelect
+                                            name={field}
+                                            options={getSelectOptions(field === "statusID" ? employeeStatuses : developmentPlans )}
+                                            value={getSelectOptions(field === "statusID" ? employeeStatuses : developmentPlans).find((option) => option.value === Number(editGoalData[field])) || "" }
+                                            onChange={(e) =>handleInputChange({
+                                                    target: {
+                                                        name: field,
+                                                        value: e.target.value,
+                                                    },
+                                                }, true)
+                                            }
+                                            showErrors={false}
+                                            required
+                                        />
+                                    ) : (
+                                        <FormInput
+                                            type={field === "targetDate" ? "date" : "text"}
+                                            name={field}
+                                            formValues={{ [field]: editGoalData[field] }}
+                                            onChange={(e) => handleInputChange(e, true)}
+                                        />
+                                    )}
                                 </td>
                             ))}
+
                             <td className="px-4 py-3 flex gap-3">
                                 <CheckBadgeIcon onClick={handleAddGoal} className="w-5 h-5 text-green-600 cursor-pointer" />
                                 <XMarkIcon
@@ -211,20 +241,40 @@ const GoalsSection = ({ refetchGoals }) => {
                             </td>
                         </tr>
                     )}
+
                     {currentPageContent.map((goal) => (
                         <tr className="border-b border-gray-200" key={goal.id}>
                             {editingGoalId === goal.id ? (
                                 <>
                                     {["name", "targetDate", "statusID", "comments", "planID"].map((field) => (
                                         <td className="px-4 py-3" key={field}>
-                                            <FormInput
-                                                type={field === "targetDate" ? "date" : "text"}
-                                                name={field}
-                                                formValues={{ [field]: editGoalData[field] }}
-                                                onChange={(e) => handleInputChange(e, true)}
-                                            />
+                                            {["statusID", "planID"].includes(field) ? (
+                                        <FormSelect
+                                            name={field}
+                                            options={getSelectOptions(field === "statusID" ? employeeStatuses : developmentPlans )}
+                                            value={getSelectOptions(field === "statusID" ? employeeStatuses : developmentPlans).find((option) => option.value === Number(editGoalData[field])) || "" }
+                                            onChange={(e) =>handleInputChange({
+                                                    target: {
+                                                        name: field,
+                                                        value: e.target.value,
+                                                    },
+                                                }, true)
+                                            }
+                                            showErrors={false}
+                                            required
+                                        />
+                                    ) : (
+                                                <FormInput
+                                                    type={field === "targetDate" ? "date" : "text"}
+                                                    name={field}
+                                                    formValues={editGoalData}
+                                                    onChange={(e) => handleInputChange(e, true)}
+                                                />
+                                            )}
                                         </td>
                                     ))}
+
+
                                     <td className="px-4 py-3 flex gap-3">
                                         <CheckBadgeIcon
                                             onClick={() => handleEditGoal(goal.id)}
@@ -240,9 +290,16 @@ const GoalsSection = ({ refetchGoals }) => {
                                 <>
                                     <td className="px-4 py-3">{goal.name}</td>
                                     <td className="px-4 py-3">{goal.targetDate?.split("T")[0]}</td>
-                                    <td className="px-4 py-3">{statusMap[goal.statusID] || "Unknown"}</td>
+                                    <td className="px-4 py-3">
+                                        {employeeStatuses.find((status) => status.id === goal.statusID)?.name || "Unknown"}
+                                    </td>
+
                                     <td className="px-4 py-3">{goal.comments}</td>
-                                    <td className="px-4 py-3">{goal.planID}</td>
+                                    <td className="px-4 py-3">
+                                        {(Array.isArray(developmentPlans) ? developmentPlans : []).find((plan) => plan.id === goal.planID)?.name || "Unknown"}
+
+                                    </td>
+
                                     <td className="px-4 py-3 flex gap-3">
                                         {showActionsId === goal.id ? (
                                             <div className="flex gap-3">

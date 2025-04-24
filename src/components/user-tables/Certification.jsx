@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
 import {
     CheckBadgeIcon,
     EllipsisVerticalIcon,
@@ -10,8 +11,10 @@ import {
     XMarkIcon,
 } from "@heroicons/react/24/outline";
 import FormInput from "../FormInput";
+import FormSelect from "../FormSelect"
 import { useToasts } from "react-toast-notifications";
 import axios from "axios";
+import { selectTrainingLevels, doGetFormData } from "../../state/slice/masterDataSlice";
 
 const CertificationSection = () => {
     const { addToast } = useToasts();
@@ -31,10 +34,17 @@ const CertificationSection = () => {
 
     const [editingCertId, setEditingCertId] = useState(null);
     const [editCertData, setEditCertData] = useState({});
-
+    const trainingStatus = useSelector(selectTrainingLevels);
+    const dispatch = useDispatch();
     const [currentPage, setCurrentPage] = useState(1);
     const rowsPerPage = 5;
 
+
+    useEffect(() => {
+        dispatch(doGetFormData());
+    }, [dispatch]);
+
+    console.log("developmentPlans from Redux:", trainingStatus);
 
     const handleEditClick = (cert) => {
         setEditingId(cert.id);
@@ -131,7 +141,7 @@ const CertificationSection = () => {
                     employeeID,
                     certificationID
                 }
-            };  
+            };
 
             const response = await axios.put(
                 `/employees/${employeeID}/certifications/${certificationID}`,
@@ -170,6 +180,18 @@ const CertificationSection = () => {
         }
     };
 
+    const getSelectOptions = (options, labelKey = "name") => {
+        if (options && options.length) {
+            return options.map((o) => {
+                const value = Number(o?.id || o?.rID || o?.checklistID);
+                const label = o?.[labelKey] || o?.value || o?.title || "Unnamed";
+                return { value, label };
+            });
+        }
+        return [];
+    };
+
+
     return (
         <div className="w-full mt-8 px-6 py-4 bg-white rounded-md">
             <div className="flex justify-between mb-4">
@@ -201,12 +223,29 @@ const CertificationSection = () => {
                         <tr className="border-b border-gray-200">
                             {["name", "certification", "dueDate", "expireDate", "trainingStatusID", "institution"].map((field) => (
                                 <td className="px-4 py-3" key={field}>
-                                    <FormInput
-                                        type={field.includes("Date") ? "date" : "text"}
-                                        name={field}
-                                        formValues={{ [field]: newCert[field] }}
-                                        onChange={(e) => handleInputChange(e)}
-                                    />
+                                    {["trainingStatusID"].includes(field) ? (
+                                        <FormSelect
+                                            name={field}
+                                            options={getSelectOptions(field === "trainingStatusID")}
+                                            value={getSelectOptions(field === "trainingStatusID").find((option) => option.value === Number(editCertData[field])) || ""}
+                                            onChange={(e) => handleInputChange({
+                                                target: {
+                                                    name: field,
+                                                    value: e.target.value,
+                                                },
+                                            }, true)
+                                            }
+                                            showErrors={false}
+                                            required
+                                        />
+                                    ) : (
+                                        <FormInput
+                                            type={field === "targetDate" ? "date" : "text"}
+                                            name={field}
+                                            formValues={{ [field]: editCertData[field] }}
+                                            onChange={(e) => handleInputChange(e, true)}
+                                        />
+                                    )}
                                 </td>
                             ))}
 
