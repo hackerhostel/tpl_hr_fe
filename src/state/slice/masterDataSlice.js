@@ -1,4 +1,4 @@
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 
 const initialState = {
@@ -17,6 +17,8 @@ export const doGetMasterData = createAsyncThunk(
     try {
       const response = await axios.get("/organizations/master-data");
       const responseData = response.data || {};
+
+      console.log("master data",responseData)
 
       if (responseData) {
         return {

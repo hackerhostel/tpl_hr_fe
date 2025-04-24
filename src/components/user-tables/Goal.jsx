@@ -12,12 +12,19 @@ import {
 import FormInput from "../FormInput";
 import { useToasts } from "react-toast-notifications";
 import axios from "axios";
+import {
+    doGetMasterData
+} from "../../state/slice/masterDataSlice"
 
 const statusMap = {
     1: "Not Started",
     2: "In Progress",
     3: "Completed"
 };
+
+useEffect(() => {
+    dispatch(doGetMasterData());
+},[]);
 
 const GoalsSection = ({ refetchGoals }) => {
     const { addToast } = useToasts();
