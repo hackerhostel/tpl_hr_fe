@@ -28,20 +28,18 @@ const FeedbackPopup = ({ isOpen, onClose, onAddFeedback }) => {
         const res = await axios.get(`/employees/${employeeID}`);
         const feedbackList = res?.data?.body?.feedback || [];
 
-        console.log("Raw feedback list from API:", feedbackList);
+       
 
         // Get employee list for name mapping
         const employeeRes = await axios.get(`/organizations/employees`);
         const employees = employeeRes.data.body;
-        console.log("employees", employees);
+
 
         // Format feedbacks
         const formatted = feedbackList.map((f) => {
           const creator = employees.find((e) => e.id === f.createdBy);
           const creatorName = creator ? `${creator.firstName} ${creator.lastName}` : "Unknown";
 
-
-          console.log(`Feedback ID: ${f.id}, createdBy: ${f.createdBy}, Creator Name: ${creatorName}`);
 
           return {
             id: f.id,
@@ -53,7 +51,6 @@ const FeedbackPopup = ({ isOpen, onClose, onAddFeedback }) => {
           };
         });
 
-        console.log("Formatted feedback data:", formatted);
 
         setFeedbackData(formatted);
       } catch (error) {
