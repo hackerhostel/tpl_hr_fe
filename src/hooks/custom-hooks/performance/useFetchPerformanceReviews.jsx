@@ -13,8 +13,6 @@ const useFetchPerformanceReviews = (employeeID, cycleID) => {
             const response = await axios.get(`/performance-reviews`, {params: {employeeID, cycleID}});
             const reviewsResponse = response?.data?.body;
 
-            // console.log(reviewsResponse)
-
             setLoading(false)
             setData(reviewsResponse)
         } catch (error) {
@@ -28,7 +26,7 @@ const useFetchPerformanceReviews = (employeeID, cycleID) => {
             fetchPerformanceReviews()
     }, [employeeID, cycleID]);
 
-    return {data, error, loading};
+    return {data, error, loading, refetch: fetchPerformanceReviews};
 };
 
 export default useFetchPerformanceReviews;
