@@ -72,14 +72,15 @@ const CertificationSection = () => {
     );
 
 
-    const handleInputChange = (e, isEdit = false) => {
+    const handleInputChange = (e) => {
         const { name, value } = e.target;
-        if (isEdit) {
-            setEditCertData({ ...editCertData, [name]: value });
+        if (editingCertId !== null) {
+          setEditCertData((prev) => ({ ...prev, [name]: value }));
         } else {
-            setNewCert({ ...newCert, [name]: value });
+          setNewCert((prev) => ({ ...prev, [name]: value }));
         }
-    };
+      };
+      
 
     const handleAddCertification = async () => {
         if (!newCert.name || !newCert.certification) {
@@ -290,7 +291,7 @@ const CertificationSection = () => {
                                                <FormInput
                                                    type={field.includes("Date") ? "date" : "text"}
                                                    name={field}
-                                                   formValues={editCertData}
+                                                   formValues={{ [field]: editCertData[field] }}
                                                    onChange={(e) => handleInputChange(e, false)}
                                                />
                                            )}

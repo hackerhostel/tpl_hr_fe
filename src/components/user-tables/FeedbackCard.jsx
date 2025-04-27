@@ -28,7 +28,9 @@ const FeedbackPopup = ({ isOpen, onClose, onAddFeedback }) => {
         const res = await axios.get(`/employees/${employeeID}`);
         const feedbackList = res?.data?.body?.feedback || [];
 
-       
+        console.log("feedback", feedbackList)
+
+
 
         // Get employee list for name mapping
         const employeeRes = await axios.get(`/organizations/employees`);
@@ -69,9 +71,6 @@ const FeedbackPopup = ({ isOpen, onClose, onAddFeedback }) => {
       const employeeID = whoamiRes?.data?.body?.userDetails?.id;
       const email = whoamiRes?.data?.body?.userDetails?.email;
 
-
-
-
       const payload = {
         ...formValues,
         feedbackTypeID: Number(formValues.feedbackTypeID),
@@ -79,7 +78,6 @@ const FeedbackPopup = ({ isOpen, onClose, onAddFeedback }) => {
         createdBy: email,
         employeeID,
       };
-
 
       const res = await axios.post(`/employees/${employeeID}/feedback`, {
         feedback: payload,
@@ -89,16 +87,22 @@ const FeedbackPopup = ({ isOpen, onClose, onAddFeedback }) => {
         onAddFeedback({
           id: res.data.feedbackID,
           name: res.data.firstName,
-          role: "Contributor", 
+          role: "Contributor",
           date: new Date().toLocaleDateString(),
           rating,
-          feedback: comments,
+          feedback: formValues.comments,
         });
 
-        onClose();
+
+        setFormValues({
+          feedbackTypeID: "",
+          comments: "",
+        });
         setRelationship("");
         setComments("");
         setRating(0);
+
+        onClose();
       }
     } catch (error) {
       console.error("Error submitting feedback:", error?.response?.data || error.message);
@@ -245,7 +249,7 @@ const FeedbackCard = () => {
   const feedback = feedbackData[currentIndex];
 
   return (
-    <div style={{ width: "100%" }} className="bg-white rounded-md p-5">
+    <div style={{ width: "100%", height: "330px" }} className="bg-white rounded-md p-5">
       {/* Header */}
       <div className="flex justify-between items-center border-b pb-2">
         <span className="text-lg font-semibold text-gray-800">
@@ -286,41 +290,41 @@ const FeedbackCard = () => {
           <p className="mt-3 text-gray-600 text-sm">{feedback.feedback}</p>
 
           {/* Pagination */}
-         {/* Pagination */}
-<div className="flex justify-center items-center gap-2 mt-4">
-  <button
-    onClick={handlePrev}
-    disabled={currentIndex === 0}
-    className={`px-2 py-1 rounded ${currentIndex === 0 ? "text-gray-300" : "text-gray-600 hover:bg-gray-100"}`}
-  >
-    {"<"}
-  </button>
+          {/* Pagination */}
+          <div className="flex justify-center items-center gap-2 mt-16">
+            <button
+              onClick={handlePrev}
+              disabled={currentIndex === 0}
+              className={`px-2 py-1 rounded ${currentIndex === 0 ? "text-gray-300" : "text-gray-600 hover:bg-gray-100"}`}
+            >
+              {"<"}
+            </button>
 
-  {/* Show max 3 page buttons */}
-  {feedbackData.slice(
-    Math.max(0, currentIndex - 1),
-    Math.min(feedbackData.length, currentIndex + 2)
-  ).map((_, index) => {
-    const pageIndex = Math.max(0, currentIndex - 1) + index;
-    return (
-      <button
-        key={pageIndex}
-        className={`px-2 py-1 text-sm ${pageIndex === currentIndex ? "text-red-500 font-bold" : "text-gray-500"}`}
-        onClick={() => setCurrentIndex(pageIndex)}
-      >
-        {pageIndex + 1}
-      </button>
-    );
-  })}
+            {/* Show max 3 page buttons */}
+            {feedbackData.slice(
+              Math.max(0, currentIndex - 1),
+              Math.min(feedbackData.length, currentIndex + 2)
+            ).map((_, index) => {
+              const pageIndex = Math.max(0, currentIndex - 1) + index;
+              return (
+                <button
+                  key={pageIndex}
+                  className={`px-2 py-1 text-sm ${pageIndex === currentIndex ? "text-red-500 font-bold" : "text-gray-500"}`}
+                  onClick={() => setCurrentIndex(pageIndex)}
+                >
+                  {pageIndex + 1}
+                </button>
+              );
+            })}
 
-  <button
-    onClick={handleNext}
-    disabled={currentIndex === feedbackData.length - 1}
-    className={`px-2 py-1 rounded ${currentIndex === feedbackData.length - 1 ? "text-gray-300" : "text-gray-600 hover:bg-gray-100"}`}
-  >
-    {">"}
-  </button>
-</div>
+            <button
+              onClick={handleNext}
+              disabled={currentIndex === feedbackData.length - 1}
+              className={`px-2 py-1 rounded ${currentIndex === feedbackData.length - 1 ? "text-gray-300" : "text-gray-600 hover:bg-gray-100"}`}
+            >
+              {">"}
+            </button>
+          </div>
 
         </>
       )}
