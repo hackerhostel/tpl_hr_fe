@@ -28,6 +28,8 @@ const FeedbackPopup = ({ isOpen, onClose, onAddFeedback }) => {
         const res = await axios.get(`/employees/${employeeID}`);
         const feedbackList = res?.data?.body?.feedback || [];
 
+        console.log("feedback", feedbackList)
+
        
 
         // Get employee list for name mapping
@@ -92,7 +94,7 @@ const FeedbackPopup = ({ isOpen, onClose, onAddFeedback }) => {
           role: "Contributor", 
           date: new Date().toLocaleDateString(),
           rating,
-          feedback: comments,
+          feedback: formValues.comments,
         });
 
         onClose();
