@@ -286,32 +286,42 @@ const FeedbackCard = () => {
           <p className="mt-3 text-gray-600 text-sm">{feedback.feedback}</p>
 
           {/* Pagination */}
-          <div className="flex justify-center items-center gap-3 mt-4">
-            <button
-              onClick={handlePrev}
-              disabled={currentIndex === 0}
-              className={`px-2 py-1 rounded ${currentIndex === 0 ? "text-gray-300" : "text-gray-600 hover:bg-gray-100"}`}
-            >
-              {"<"}
-            </button>
-            {feedbackData.map((_, index) => (
-              <button
-                key={index}
-                className={`px-2 py-1 text-sm ${index === currentIndex ? "text-red-500 font-bold" : "text-gray-500"}`}
-                onClick={() => setCurrentIndex(index)}
-              >
-                {index + 1}
-              </button>
-            ))}
-            <button
-              onClick={handleNext}
-              disabled={currentIndex === feedbackData.length - 1}
-              className={`px-2 py-1 rounded ${currentIndex === feedbackData.length - 1 ? "text-gray-300" : "text-gray-600 hover:bg-gray-100"
-                }`}
-            >
-              {">"}
-            </button>
-          </div>
+         {/* Pagination */}
+<div className="flex justify-center items-center gap-2 mt-4">
+  <button
+    onClick={handlePrev}
+    disabled={currentIndex === 0}
+    className={`px-2 py-1 rounded ${currentIndex === 0 ? "text-gray-300" : "text-gray-600 hover:bg-gray-100"}`}
+  >
+    {"<"}
+  </button>
+
+  {/* Show max 3 page buttons */}
+  {feedbackData.slice(
+    Math.max(0, currentIndex - 1),
+    Math.min(feedbackData.length, currentIndex + 2)
+  ).map((_, index) => {
+    const pageIndex = Math.max(0, currentIndex - 1) + index;
+    return (
+      <button
+        key={pageIndex}
+        className={`px-2 py-1 text-sm ${pageIndex === currentIndex ? "text-red-500 font-bold" : "text-gray-500"}`}
+        onClick={() => setCurrentIndex(pageIndex)}
+      >
+        {pageIndex + 1}
+      </button>
+    );
+  })}
+
+  <button
+    onClick={handleNext}
+    disabled={currentIndex === feedbackData.length - 1}
+    className={`px-2 py-1 rounded ${currentIndex === feedbackData.length - 1 ? "text-gray-300" : "text-gray-600 hover:bg-gray-100"}`}
+  >
+    {">"}
+  </button>
+</div>
+
         </>
       )}
 
