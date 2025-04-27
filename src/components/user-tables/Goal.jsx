@@ -176,7 +176,7 @@ const GoalsSection = ({ refetchGoals }) => {
     };
 
     return (
-        <div className="w-full mt-8 px-6 py-4 bg-white rounded-md">
+        <div className="w-full px-6 py-4 bg-white rounded-md">
             <div className="flex justify-between mb-4">
                 <span className="text-lg text-text-color">Goals</span>
                 {!addingNew && (

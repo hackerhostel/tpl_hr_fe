@@ -39,7 +39,7 @@ const Competencies = () => {
   };
 
   return (
-    <div style={{width:"100%"}} className="bg-white rounded-md p-5 ">
+    <div style={{ width: "100%", height:"330px" }} className="bg-white rounded-md p-5 ">
       {/* Header */}
       <div className="flex space-x-3 items-center border-b pb-2">
         <div>
@@ -66,7 +66,7 @@ const Competencies = () => {
 
 
       {/* Pagination */}
-      <div className="flex justify-center items-center gap-3 mt-4">
+      <div className="flex justify-center items-center gap-3 mt-16">
         <button
           onClick={handlePrev}
           disabled={currentIndex === 0}
