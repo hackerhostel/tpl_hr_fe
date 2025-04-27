@@ -194,14 +194,13 @@ const GoalsSection = ({ refetchGoals }) => {
                         <th className="py-3 px-4">Target Date</th>
                         <th className="py-3 px-4">Status</th>
                         <th className="py-3 px-4">Comments</th>
-                        <th className="py-3 px-4">Plan ID</th>
                         <th className="py-3 px-4">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {addingNew && (
                         <tr className="border-b border-gray-200">
-                            {["name", "targetDate", "statusID", "comments", "planID"].map((field) => (
+                            {["name", "targetDate", "statusID", "comments"].map((field) => (
                                 <td className="px-4 py-3" key={field}>
                                     {["statusID", "planID"].includes(field) ? (
                                         <FormSelect
@@ -246,7 +245,7 @@ const GoalsSection = ({ refetchGoals }) => {
                         <tr className="border-b border-gray-200" key={goal.id}>
                             {editingGoalId === goal.id ? (
                                 <>
-                                    {["name", "targetDate", "statusID", "comments", "planID"].map((field) => (
+                                    {["name", "targetDate", "statusID", "comments"].map((field) => (
                                         <td className="px-4 py-3" key={field}>
                                             {["statusID", "planID"].includes(field) ? (
                                         <FormSelect
@@ -295,10 +294,7 @@ const GoalsSection = ({ refetchGoals }) => {
                                     </td>
 
                                     <td className="px-4 py-3">{goal.comments}</td>
-                                    <td className="px-4 py-3">
-                                        {(Array.isArray(developmentPlans) ? developmentPlans : []).find((plan) => plan.id === goal.planID)?.name || "Unknown"}
-
-                                    </td>
+                                 
 
                                     <td className="px-4 py-3 flex gap-3">
                                         {showActionsId === goal.id ? (
@@ -310,8 +306,7 @@ const GoalsSection = ({ refetchGoals }) => {
                                                             name: goal.name || "",
                                                             targetDate: goal.targetDate.split("T")[0] || "",
                                                             statusID: goal.statusID || "",
-                                                            comments: goal.comments || "",
-                                                            planID: goal.planID || ""
+                                                            comments: goal.comments || ""                                
                                                         });
                                                         setEditingGoalId(goal.id);
                                                         setShowActionsId(null);

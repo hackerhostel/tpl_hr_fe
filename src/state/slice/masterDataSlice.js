@@ -1,5 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
+import { isJsxClosingFragment } from "typescript";
 
 const initialState = {
   designations: [],
@@ -19,6 +20,8 @@ export const doGetMasterData = createAsyncThunk(
     try {
       const response = await axios.get("/organizations/master-data");
       const responseData = response.data || {};
+
+      console.log("ddd", responseData)
 
       if (responseData) {
         return {
@@ -43,6 +46,8 @@ export const doGetFormData = createAsyncThunk(
     try {
       const response = await axios.get("/employees/form-data");
       const responseData = response.data?.body;
+
+      console.log("ff",responseData)
 
 
       if (responseData) {
