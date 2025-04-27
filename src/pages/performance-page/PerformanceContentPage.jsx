@@ -2,12 +2,15 @@ import React, {useEffect, useState} from "react";
 import FormSelect from "../../components/FormSelect.jsx";
 import FormTextArea from "../../components/FormTextArea.jsx";
 import FormInput from "../../components/FormInput.jsx"
-import {getSelectOptionsForPR} from "../../utils/commonUtils.js";
+import {getSelectOptions, getSelectOptionsForPR} from "../../utils/commonUtils.js";
 import useFetchPerformanceReviewFormData
     from "../../hooks/custom-hooks/performance/useFetchPerformanceReviewFormData.jsx";
 import useFetchPerformanceReviews from "../../hooks/custom-hooks/performance/useFetchPerformanceReviews.jsx";
+import {useToasts} from "react-toast-notifications";
+import axios from "axios";
 
 const PerformanceContentPage = () => {
+    const {addToast} = useToasts();
     const [departments, setDepartments] = useState([]);
     const [selectedDepartment, setSelectedDepartment] = useState(0);
     const [employees, setEmployees] = useState([]);
@@ -16,9 +19,13 @@ const PerformanceContentPage = () => {
     const [selectedCycle, setSelectedCycle] = useState(0);
     const [reviewCycle, setReviewCycle] = useState({})
     const [reviewItems, setReviewItems] = useState([])
+    const [achievementCount, setAchievementCount] = useState({})
 
     const {data: formData} = useFetchPerformanceReviewFormData()
-    const {data: reviewData} = useFetchPerformanceReviews(selectedEmployee, selectedCycle)
+    const {
+        data: reviewData,
+        refetch: reFetchPerformanceReviews
+    } = useFetchPerformanceReviews(selectedEmployee, selectedCycle)
 
     useEffect(() => {
         const resetDepartments = () => {
@@ -52,6 +59,9 @@ const PerformanceContentPage = () => {
         const resetEmployees = () => {
             setEmployees([]);
             setSelectedEmployee(0);
+            setReviewCycle({})
+            setReviewItems([])
+            setAchievementCount({})
         };
 
         if (selectedDepartment <= 0) {
@@ -107,12 +117,32 @@ const PerformanceContentPage = () => {
         if (reviewCycleData) {
             setReviewCycle(reviewCycleData)
             if (reviewCycleData?.reviewItems && reviewCycleData?.reviewItems.length) {
-                setReviewItems(reviewCycleData?.reviewItems)
+                const reviewItemsData = reviewCycleData?.reviewItems
+                setReviewItems(reviewItemsData)
+                let notAchieved = 0;
+                let partiallyAchieved = 0;
+                let achieved = 0;
+
+                for (const { status } of reviewItemsData) {
+                    switch (status) {
+                        case 'Achieved':
+                            achieved++;
+                            break;
+                        case 'Partially Achieved':
+                            partiallyAchieved++;
+                            break;
+                        case 'Not Achieved':
+                            notAchieved++;
+                            break;
+                        default:
+                            break;
+                    }
+                }
+
+                setAchievementCount({ notAchieved, partiallyAchieved, achieved });
             }
         }
     }, [reviewData]);
-
-    const [isUpdating, setIsUpdating] = useState(false);
 
     const StatusCount = ({ count, label, variant = "default" }) => {
         const variants = {
@@ -133,33 +163,59 @@ const PerformanceContentPage = () => {
         );
     };
 
+    const handleReviewItemsChange = (name, value, kpiID, isText) => {
+        const updatedReviewItems = reviewItems.map(item => {
+            if (item.kpiID === kpiID) {
+                const updatedItem = {...item, [name]: isText ? value : Number(value)};
+                return updatedItem;
+            }
+            return item;
+        });
 
-    const testExecutions = [
-        {
-            id: 1,
-            kpi: "Code Quality",
-            target: "90%",
-            scores: "85%",
-            status: 1,
-            notes: "Needs minor improvements in documentation.",
-        },
-        {
-            id: 2,
-            kpi: "Test Coverage",
-            target: "80%",
-            scores: "78%",
-            status: 2,
-            notes: "Increase unit test coverage for critical modules.",
-        },
-        {
-            id: 3,
-            kpi: "Performance",
-            target: "1s response time",
-            scores: "1.2s",
-            status: 3,
-            notes: "Optimize API calls for better response time.",
-        },
-    ];
+        setReviewItems(updatedReviewItems);
+    };
+
+    const handleSaveReviewCycle = async () => {
+        if (!reviewCycle?.reviewID) {
+            const payload = {
+                employeeID: selectedEmployee,
+                cycleID: selectedCycle,
+                comment: reviewCycle?.comment || 'N/A',
+                reviewItems: []
+            };
+
+            let fallbackStatus = formData?.kpiStatuses.find(ks => ks.name === 'Not Achieved');
+
+            if (!fallbackStatus && formData?.kpiStatuses.length) {
+                fallbackStatus = formData.kpiStatuses[0];
+            }
+
+            for (const rItem of reviewItems) {
+                payload.reviewItems.push({
+                    kpiID: rItem?.kpiID,
+                    statusID: rItem?.statusID || fallbackStatus?.id,
+                    kpiScore: rItem?.kpiScore && rItem?.kpiScore !== '' ? rItem?.kpiScore : '0',
+                    feedback: rItem?.feedback || 'N/A',
+                })
+            }
+
+            try {
+                const response = await axios.post(`performance-reviews`, {review: payload})
+                const created = response?.data?.body
+
+                if (created) {
+                    addToast('Performance review successfully added', {appearance: 'success'});
+                    reFetchPerformanceReviews()
+                } else {
+                    addToast('Failed to add the performance review', {appearance: 'error'});
+                }
+            } catch (error) {
+                addToast('Failed to add the performance review', {appearance: 'error'});
+            }
+        } else {
+            addToast('Review update is WIP', {appearance: 'warning'});
+        }
+    };
 
     return (
         <div className="p-2 bg-dashboard-bgc h-full">
@@ -176,67 +232,87 @@ const PerformanceContentPage = () => {
                     <FormSelect name="cycle" className="w-40 " options={getSelectOptionsForPR(cycles)}
                                 formValues={{cycle: selectedCycle}}
                                 onChange={({target: {value}}) => setSelectedCycle(Number(value))}/>
-                    <button className="bg-primary-pink text-white  rounded-lg w-44 h-10">Save</button>
+                    <button
+                        className="bg-primary-pink text-white rounded-lg w-44 h-10 cursor-pointer disabled:bg-gray-400 disabled:cursor-not-allowed"
+                        disabled={reviewItems.length === 0} onClick={handleSaveReviewCycle}>Save
+                    </button>
                 </div>
             </div>
             <div className="flex-col overflow-y-auto">
                 <div className="p-4 rounded-md">
                     <div className="bg-white p-4 rounded-md mb-5 h-40">
                         <div className="flex space-x-8 mt-3">
-                            <StatusCount count="4" label="Achieved" variant="default" />
-                            <StatusCount count="2" label="Partially Achieved " variant="success" />
-                            <StatusCount count="1" label="Not Achieved" variant="danger" />
+                            <StatusCount count={achievementCount?.achieved || 0} label="Achieved" variant="success"/>
+                            <StatusCount count={achievementCount?.partiallyAchieved || 0} label="Partially Achieved "
+                                         variant="warning"/>
+                            <StatusCount count={achievementCount?.notAchieved || 0} label="Not Achieved"
+                                         variant="danger"/>
                         </div>
                     </div>
                     {reviewItems.length ? (
-                        <table className="min-w-full rounded-md border-collapse bg-white">
-                            <thead>
-                            <tr className="h-16 text-secondary-grey">
-                                <th className="px-4 py-2 text-left w-44">KPI</th>
-                                <th className="px-4 py-2 text-left w-44">Target</th>
-                                <th className="px-4 py-2 text-center w-44">Scores</th>
-                                <th className="px-4 py-2 text-center w-44">Feedback</th>
-                                <th className="px-4 py-2 text-center w-44">Status</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            {reviewItems.map((row) => (
-                                <tr key={row?.kpiID} className="border-b hover:bg-slate-100">
-                                    <td className="px-4 py-2">{row?.kpiName || ''}</td>
-                                    <td className="px-4 py-2">{row?.targetMetrics || ''}</td>
-                                    <td className="px-4 py-2 w-44">
-                                        <FormInput
-                                            type="text"
-                                            name="scores"
-                                            formValues={{scores: ''}}
-                                            // onChange={({target: {name, value}}) => handleFormChange(name, value, true)}
-                                        />
-                                    </td>
-                                    <td className="px-4 py-2">
-                                        <FormTextArea
-                                            name="note"
-                                            formValues={{ note: row.notes }}
-                                            disabled={isUpdating}
-                                            value={row.notes}
-                                            className="px-4 py-2 w-54 h-10 border"
-                                        />
-                                    </td>
-                                    <td className="px-4 py-2">
-                                        <FormSelect
-                                            name="testField"
-                                            formValues={{ testField: "Achieved" }}
-                                            options={[
-                                                { label: "Achieved", value: "achieved" },
-                                                { label: "Partially Achieved", value: "partially_achieved" },
-                                                { label: "Not Achieved", value: "not_achieved" },
-                                            ]}
-                                            onChange={(e) => console.log(e.target.value)}
-                                        />
-                                    </td>
+                        <>
+                            <table className="min-w-full rounded-md border-collapse bg-white">
+                                <thead>
+                                <tr className="h-16 text-secondary-grey">
+                                    <th className="px-4 py-2 text-left w-44">KPI</th>
+                                    <th className="px-4 py-2 text-left w-24">Target</th>
+                                    <th className="px-4 py-2 text-center w-36">Scores</th>
+                                    <th className="px-4 py-2 text-center">Feedback</th>
+                                    <th className="px-4 py-2 text-center w-48">Status</th>
                                 </tr>
-                            ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                {reviewItems.map((reviewItem) => (
+                                    <tr key={reviewItem?.kpiID} className="border-b hover:bg-slate-100">
+                                        <td className="px-4 py-2 w-44">{reviewItem?.kpiName || ''}</td>
+                                        <td className="px-4 py-2 w-24">{reviewItem?.targetMetrics || ''}</td>
+                                        <td className="px-4 py-2 w-36">
+                                            <FormInput
+                                                type="text"
+                                                name="kpiScore"
+                                                formValues={{kpiScore: reviewItem?.kpiScore ? reviewItem?.kpiScore : ''}}
+                                                onChange={({target: {name, value}}) =>
+                                                    handleReviewItemsChange(name, value, reviewItem?.kpiID, true)
+                                                }
+                                            />
+                                        </td>
+                                        <td className="px-4 py-2">
+                                            <FormTextArea
+                                                name="feedback"
+                                                formValues={{feedback: reviewItem?.feedback}}
+                                                onChange={({target: {name, value}}) =>
+                                                    handleReviewItemsChange(name, value, reviewItem?.kpiID, true)
+                                                }
+                                                className="px-4 py-2 h-10 border w-full rounded-md"
+                                            />
+                                        </td>
+                                        <td className="px-4 py-2 w-48">
+                                            <FormSelect
+                                                name="statusID"
+                                                formValues={{statusID: reviewItem?.statusID}}
+                                                options={formData?.kpiStatuses ? getSelectOptions(formData?.kpiStatuses) : []}
+                                                onChange={({target: {name, value}}) =>
+                                                    handleReviewItemsChange(name, value, reviewItem?.kpiID, false)
+                                                }
+                                            />
+                                        </td>
+                                    </tr>
+                                ))}
+                                </tbody>
+                            </table>
+                            <div className="p-4 rounded-md mt-2">
+                                <p className="text-text-color font-bold align-left">Actions</p>
+                                <FormTextArea
+                                    name="comment"
+                                    rows={6}
+                                    formValues={{comment: reviewCycle?.comment}}
+                                    onChange={({target: {name, value}}) =>
+                                        setReviewCycle({...reviewCycle, [name]: value})
+                                    }
+                                    className="px-4 py-2 border w-full rounded-md mt-2"
+                                />
+                            </div>
+                        </>
                     ) : (<></>)}
                 </div>
             </div>
