@@ -1,9 +1,8 @@
 import MainPageLayout from '../../layouts/MainPageLayout.jsx'
 import UserListPage from "./UserListPage.jsx";
 import UserContent from "./UserContent.jsx";
-import { PlusCircleIcon } from "@heroicons/react/24/outline/index.js";
 
-const UserLayout = () => {
+const EmployeeLayout = () => {
   return (
     <MainPageLayout
       title={
@@ -17,4 +16,4 @@ const UserLayout = () => {
   );
 }
 
-export default UserLayout;
+export default EmployeeLayout;

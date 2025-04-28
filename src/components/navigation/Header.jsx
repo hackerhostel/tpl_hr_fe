@@ -1,15 +1,13 @@
 import React, {Fragment, useCallback, useState} from "react";
 import {Menu, Transition} from "@headlessui/react";
 import {useDispatch, useSelector} from "react-redux";
-import {BellIcon, UserIcon, ArrowRightStartOnRectangleIcon} from "@heroicons/react/24/outline";
-import FormSelect from "../FormSelect.jsx";
+import {ArrowRightStartOnRectangleIcon, BellIcon, UserIcon} from "@heroicons/react/24/outline";
 import {doSwitchProject, selectProjectList, selectSelectedProject} from "../../state/slice/projectSlice.js";
 import {signOut} from 'aws-amplify/auth';
 import {selectUser} from "../../state/slice/authSlice.js";
 import Notification from "./NotificationPopup.jsx"
-import HeaderTaskCreateComponent from "../task/create/HeaderTaskCreateComponent.jsx";
+import HeaderTaskCreateComponent from "../task/create/HeaderEmployeeCreateComponent.jsx";
 import {Link, useHistory, useLocation} from 'react-router-dom';
-import { Dashboard } from "powerbi-client";
 
 const Header = () => {
   const dispatch = useDispatch();
@@ -87,12 +85,12 @@ const Header = () => {
 
   return (
     <div className="flex justify-between h-16 w-full">
-      <div className="flex space-x-8 text-text-color text-lg ml-72 py-3 px-4 ">
-      <MenuItem link="/dashboard" label="Dashboard" />
-        <MenuItem link="/profile" label="Employee" />
-        <MenuItem link="/projects" label="Role" />
-        <MenuItem link ="/test-plans" label="Performance" />
-      </div>
+        <div className="flex space-x-8 text-text-color text-lg ml-72 py-3 px-4 ">
+            <MenuItem link="/dashboard" label="Dashboard"/>
+            <MenuItem link="/employee" label="Employee"/>
+            <MenuItem link="/role" label="Role"/>
+            <MenuItem link="/reviews" label="Performance"/>
+        </div>
 
 
       {/* Right Section */}
