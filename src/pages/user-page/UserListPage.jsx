@@ -149,10 +149,10 @@ const UserListPage = () => {
       );
       const designationName = designationObj ? designationObj.title : "N/A";
 
-      const statusName =
-        employeeStatuses.find(
-          (s) => s.id === Number(selectedUser.employeeStatusID)
-        )?.name || "N/A";
+      const statusObj = employeeStatuses.find(
+        (s) => s.id === Number(selectedUser.employeeStatusID)
+      );
+      const statusName = statusObj ? statusObj.name : "N/A";
 
       setFormValues({
         firstName: selectedUser.firstName || "",
@@ -171,10 +171,8 @@ const UserListPage = () => {
         roleName: roleName,
         designation: selectedUser.designationID || "",
         designationName: designationName,
-        employeeStatusID: Number(formValues.status),
-        statusName:
-          employeeStatuses.find((s) => s.id === Number(formValues.status))
-            ?.name || formValues.statusName,
+        status: selectedUser.employeeStatusID || "",
+        statusName: statusName,
         id: selectedUser.id,
       });
 
@@ -201,6 +199,34 @@ const UserListPage = () => {
 
   const toggleEditable = () => {
     setIsEditable(!isEditable);
+  };
+
+  const handleInviteUser = async () => {
+    if (!selectedUser?.id) {
+      addToast("Please select a user to invite.", { appearance: "error" });
+      return;
+    }
+
+    const employeeID = Number(selectedUser.id);
+    if (isNaN(employeeID)) {
+      addToast("Invalid employee ID.", { appearance: "error" });
+      return;
+    }
+
+    try {
+      const response = await axios.post("/organizations/invite-employee", {
+        employeeID: employeeID,
+      });
+
+      if (response.status === 201) {
+        addToast("User invited successfully", { appearance: "success" });
+      }
+    } catch (error) {
+      console.error("Error inviting user:", error);
+      addToast(error?.response?.data?.message || "Failed to invite user", {
+        appearance: "error",
+      });
+    }
   };
 
   const handleUpdateUser = async () => {
@@ -233,7 +259,7 @@ const UserListPage = () => {
         designationName:
           designations.find((d) => d.id === Number(formValues.designation))
             ?.title || formValues.designationName,
-        status: Number(formValues.status),
+        employeeStatusID: Number(formValues.status),
         statusName:
           employeeStatuses.find((s) => s.id === Number(formValues.status))
             ?.name || formValues.statusName,
@@ -257,6 +283,24 @@ const UserListPage = () => {
     }
   };
 
+  // Function to determine if user is active or inactive
+  const getUserStatus = () => {
+    if (!selectedUser) return { active: false, label: "Inactive" };
+
+    // Determine active status based on employeeStatusID or status field
+    const statusObj = employeeStatuses.find(
+      (s) => s.id === Number(selectedUser.employeeStatusID)
+    );
+
+    const isActive =
+      statusObj?.name === "Active" || selectedUser.status === "active";
+
+    return {
+      active: isActive,
+      label: isActive ? "Active" : "Inactive",
+    };
+  };
+
   if (userListForLoading || userDataLoading)
     return (
       <div className="p-2">
@@ -265,6 +309,8 @@ const UserListPage = () => {
     );
   if (userListError || userDataError)
     return <ErrorAlert message="Failed to fetch users at the moment" />;
+
+  const userStatus = getUserStatus();
 
   return (
     <div className="h-list-screen overflow-y-auto w-full pl-3">
@@ -281,7 +327,15 @@ const UserListPage = () => {
 
         <div className="flex items-center gap-2">
           <div className="w-96 bg-white rounded-lg p-2 h-fit">
-            <div className="flex justify-end">
+            <div className="flex justify-between">
+              {/* Status Label - Green for active, red for inactive */}
+              {selectedUser && (
+                <div
+                  className={`px-3 py-1 rounded-md text-white text-lg ${userStatus.active ? "bg-green-500" : "bg-red-500"}`}
+                >
+                  {userStatus.label}
+                </div>
+              )}
               <PencilIcon
                 onClick={toggleEditable}
                 className="w-4 text-secondary-grey cursor-pointer"
@@ -344,17 +398,7 @@ const UserListPage = () => {
                 )}
 
                 <button
-                  onClick={() => {
-                    if (selectedRole) {
-                      addToast("User invited successfully", {
-                        appearance: "success",
-                      });
-                    } else {
-                      addToast("Please select a role to invite.", {
-                        appearance: "error",
-                      });
-                    }
-                  }}
+                  onClick={handleInviteUser}
                   className="bg-primary-pink text-white rounded-md py-1 px-4 min-w-[100px] h-10"
                 >
                   INVITE
@@ -614,7 +658,7 @@ const UserListPage = () => {
                       );
                       setFormValues((prev) => ({
                         ...prev,
-                        status: Number(e.target.value),
+                        status: e.target.value,
                         statusName: status ? status.name : e.target.value,
                       }));
                     }}
@@ -634,11 +678,12 @@ const UserListPage = () => {
                     showLabel={true}
                   />
                 )}
+
+                {/* Full-width Update button */}
                 <button
                   type="submit"
                   onClick={handleUpdateUser}
-                  className="px-4 py-2 bg-primary-pink text-white rounded-md"
-                  style={{ width: "185px" }}
+                  className="w-full px-4 py-2 bg-primary-pink text-white rounded-md"
                 >
                   Update
                 </button>
