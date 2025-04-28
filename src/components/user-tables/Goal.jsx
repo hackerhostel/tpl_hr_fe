@@ -23,7 +23,7 @@ const GoalsSection = ({ refetchGoals }) => {
     const [goalList, setGoalList] = useState([]);
     const [showActionsId, setShowActionsId] = useState(null);
     const [addingNew, setAddingNew] = useState(false);
-    const [newGoal, setNewGoal] = useState({ name: "", targetDate: "", statusID: "", comments: "", planID: "" });
+    const [newGoal, setNewGoal] = useState({ name: "", targetDate: "", statusID: "", comments: "" });
     const [editingGoalId, setEditingGoalId] = useState(null);
     const [editGoalData, setEditGoalData] = useState({});
     const employeeStatuses = useSelector(selectEmployeeStatuses);
@@ -38,14 +38,15 @@ const GoalsSection = ({ refetchGoals }) => {
     const indexOfFirst = indexOfLast - rowsPerPage;
     const currentPageContent = goalList.slice(indexOfFirst, indexOfLast);
 
-    const handleInputChange = (e, isEdit = false) => {
+    const handleInputChange = (e) => {
         const { name, value } = e.target;
-        if (isEdit) {
-            setEditGoalData({ ...editGoalData, [name]: value });
+        if (editingGoalId !== null) {
+          setEditGoalData((prev) => ({ ...prev, [name]: value }));
         } else {
-            setNewGoal({ ...newGoal, [name]: value });
+          setNewGoal((prev) => ({ ...prev, [name]: value }));
         }
-    };
+      };
+      
 
 
     useEffect(() => {
@@ -87,7 +88,6 @@ const GoalsSection = ({ refetchGoals }) => {
             const payload = {
                 goal: {
                     name: newGoal.name,
-                    planID: parseInt(newGoal.planID),
                     targetDate: newGoal.targetDate,
                     comments: newGoal.comments,
                     statusID: parseInt(newGoal.statusID) || 1,
@@ -101,7 +101,7 @@ const GoalsSection = ({ refetchGoals }) => {
             if (response?.data?.goalID) {
                 addToast("Goal added successfully", { appearance: "success" });
                 setAddingNew(false);
-                setNewGoal({ name: "", targetDate: "", statusID: "", comments: "", planID: "" });
+                setNewGoal({ name: "", targetDate: "", statusID: "", comments: "" });
                 fetchGoals();
             } else {
                 throw new Error("Goal ID not returned");
@@ -122,7 +122,6 @@ const GoalsSection = ({ refetchGoals }) => {
                 goal: {
                     ...editGoalData,
                     employeeID: employeeID,
-                    planID: parseInt(editGoalData.planID),
                     statusID: parseInt(editGoalData.statusID),
                 },
                 updatedBy: email
@@ -168,7 +167,7 @@ const GoalsSection = ({ refetchGoals }) => {
             const response = await axios.delete(`/employees/${employeeID}/goals/${goalId}`);
             if (response?.data?.success) {
                 addToast("Goal deleted successfully", { appearance: "success" });
-                fetchGoals();
+                await fetchGoals();
             }
         } catch (err) {
             console.error("Delete Goal Error:", err);
@@ -177,7 +176,7 @@ const GoalsSection = ({ refetchGoals }) => {
     };
 
     return (
-        <div className="w-full mt-8 px-6 py-4 bg-white rounded-md">
+        <div className="w-full px-6 py-4 bg-white rounded-md">
             <div className="flex justify-between mb-4">
                 <span className="text-lg text-text-color">Goals</span>
                 {!addingNew && (
@@ -194,20 +193,19 @@ const GoalsSection = ({ refetchGoals }) => {
                         <th className="py-3 px-4">Target Date</th>
                         <th className="py-3 px-4">Status</th>
                         <th className="py-3 px-4">Comments</th>
-                        <th className="py-3 px-4">Plan ID</th>
                         <th className="py-3 px-4">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {addingNew && (
                         <tr className="border-b border-gray-200">
-                            {["name", "targetDate", "statusID", "comments", "planID"].map((field) => (
+                            {["name", "targetDate", "statusID", "comments"].map((field) => (
                                 <td className="px-4 py-3" key={field}>
-                                    {["statusID", "planID"].includes(field) ? (
+                                    {["statusID"].includes(field) ? (
                                         <FormSelect
                                             name={field}
                                             options={getSelectOptions(field === "statusID" ? employeeStatuses : developmentPlans )}
-                                            value={getSelectOptions(field === "statusID" ? employeeStatuses : developmentPlans).find((option) => option.value === Number(editGoalData[field])) || "" }
+                                            value={getSelectOptions(field === "statusID" ? employeeStatuses : developmentPlans).find((option) => option.value === Number(newGoal[field])) || "" }
                                             onChange={(e) =>handleInputChange({
                                                     target: {
                                                         name: field,
@@ -222,7 +220,7 @@ const GoalsSection = ({ refetchGoals }) => {
                                         <FormInput
                                             type={field === "targetDate" ? "date" : "text"}
                                             name={field}
-                                            formValues={{ [field]: editGoalData[field] }}
+                                            formValues={{ [field]: newGoal[field] }}
                                             onChange={(e) => handleInputChange(e, true)}
                                         />
                                     )}
@@ -234,7 +232,7 @@ const GoalsSection = ({ refetchGoals }) => {
                                 <XMarkIcon
                                     onClick={() => {
                                         setAddingNew(false);
-                                        setNewGoal({ name: "", targetDate: "", statusID: "", comments: "", planID: "" });
+                                        setNewGoal({ name: "", targetDate: "", statusID: "", comments: ""});
                                     }}
                                     className="w-5 h-5 text-red-600 cursor-pointer"
                                 />
@@ -246,30 +244,27 @@ const GoalsSection = ({ refetchGoals }) => {
                         <tr className="border-b border-gray-200" key={goal.id}>
                             {editingGoalId === goal.id ? (
                                 <>
-                                    {["name", "targetDate", "statusID", "comments", "planID"].map((field) => (
+                                    {["name", "targetDate", "statusID", "comments"].map((field) => (
                                         <td className="px-4 py-3" key={field}>
-                                            {["statusID", "planID"].includes(field) ? (
+                                            {["statusID"].includes(field) ? (
                                         <FormSelect
-                                            name={field}
-                                            options={getSelectOptions(field === "statusID" ? employeeStatuses : developmentPlans )}
-                                            value={getSelectOptions(field === "statusID" ? employeeStatuses : developmentPlans).find((option) => option.value === Number(editGoalData[field])) || "" }
-                                            onChange={(e) =>handleInputChange({
-                                                    target: {
-                                                        name: field,
-                                                        value: e.target.value,
-                                                    },
-                                                }, true)
-                                            }
-                                            showErrors={false}
-                                            required
-                                        />
+                                        name={field}
+                                        options={getSelectOptions(field === "statusID" ? employeeStatuses : developmentPlans)}
+                                        value={getSelectOptions(field === "statusID" ? employeeStatuses : developmentPlans)
+                                          .find((option) => option.value === Number(editGoalData[field])) || ""}
+                                        onChange={(e) => handleInputChange(e)}
+                                        showErrors={false}
+                                        required
+                                      />
+                                      
                                     ) : (
-                                                <FormInput
-                                                    type={field === "targetDate" ? "date" : "text"}
-                                                    name={field}
-                                                    formValues={editGoalData}
-                                                    onChange={(e) => handleInputChange(e, true)}
-                                                />
+                                        <FormInput
+                                        type={field === "targetDate" ? "date" : "text"}
+                                        name={field}
+                                        formValues={{ [field]: editGoalData[field] }}
+                                        onChange={(e) => handleInputChange(e)}
+                                      />
+                                      
                                             )}
                                         </td>
                                     ))}
@@ -295,10 +290,7 @@ const GoalsSection = ({ refetchGoals }) => {
                                     </td>
 
                                     <td className="px-4 py-3">{goal.comments}</td>
-                                    <td className="px-4 py-3">
-                                        {(Array.isArray(developmentPlans) ? developmentPlans : []).find((plan) => plan.id === goal.planID)?.name || "Unknown"}
-
-                                    </td>
+                                 
 
                                     <td className="px-4 py-3 flex gap-3">
                                         {showActionsId === goal.id ? (
@@ -310,8 +302,7 @@ const GoalsSection = ({ refetchGoals }) => {
                                                             name: goal.name || "",
                                                             targetDate: goal.targetDate.split("T")[0] || "",
                                                             statusID: goal.statusID || "",
-                                                            comments: goal.comments || "",
-                                                            planID: goal.planID || ""
+                                                            comments: goal.comments || ""                                
                                                         });
                                                         setEditingGoalId(goal.id);
                                                         setShowActionsId(null);
@@ -320,7 +311,10 @@ const GoalsSection = ({ refetchGoals }) => {
 
                                                 <TrashIcon
                                                     className="w-5 h-5 text-text-color cursor-pointer"
-                                                    onClick={() => handleDeleteCertification(goal.id)}
+                                                    onClick={() => {
+                                                        handleDeleteGoal(goal.id);
+                                                        setShowActionsId(null);
+                                                      }}
                                                 />
                                                 <XMarkIcon
                                                     className="w-5 h-5 text-text-color cursor-pointer"

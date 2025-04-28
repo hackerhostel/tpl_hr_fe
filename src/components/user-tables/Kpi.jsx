@@ -42,31 +42,40 @@ const Competencies = () => {
     <div style={{ width: "100%", height:"330px" }} className="bg-white rounded-md p-5 ">
       {/* Header */}
       <div className="flex space-x-3 items-center border-b pb-2">
-        <div>
+        <div className="flex space-x-8">
           <span className="text-lg font-semibold text-text-color">
-          Competencies ({currentIndex + 1} / {feedbackData.length})
+          KPI ({currentIndex + 1} / {feedbackData.length})
           </span>
+
+          <span className="text-sm font-semibold text-text-color">Active working hours</span>
+
+          <span className="text-lg font-semibold text-text-color">35</span>
         </div>
       </div>
 
       {/* User Info */}
       <div className="mt-3">
-        <div className="flex justify-between">
-          <span className="text-text-color font-bold">Back-End Development Knowledge</span>
-          <span className="bg-purple-200 text-purple-800 text-xs font-semibold px-2 py-1 rounded">
-            Advanced
+        <div className="flex flex-col">
+          <span className="text-sm font-bold">Description</span>
+          <span className="text-text-color text-sm">
+            Lorem ipsum dolor, sit amet consectetur 
           </span>
         </div>
 
     
         <div className="mt-4">
-          <p className="text-text-color">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation </p>
+            <span className="text-sm font-bold">Formula</span>
+          <p className="text-text-color text-sm">Lorem ipsum dolor sit amet, consectetur</p>
+        </div>
+
+        <div className="mt-4">
+            <p className="text-text-color text-sm">Lorem ipsum dolor sit amet consectetur adipisicing elit. Vitae dolorem nam, eius at numquam dicta incidunt ad assumenda tempore est maxime, quia omnis obcaecati fugit amet quasi voluptates aut quidem?</p>
         </div>
       </div>
 
 
       {/* Pagination */}
-      <div className="flex justify-center items-center gap-3 mt-16">
+      <div className="flex justify-center items-center gap-3 mt-4">
         <button
           onClick={handlePrev}
           disabled={currentIndex === 0}
