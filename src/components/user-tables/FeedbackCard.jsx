@@ -2,15 +2,13 @@ import React, {useEffect, useState} from "react";
 import {PlusCircleIcon, StarIcon, XMarkIcon} from "@heroicons/react/24/outline";
 import FormTextArea from "../FormTextArea";
 import axios from "axios";
-import {useSelector} from "react-redux";
-import {selectFeedBackTypes} from "../../state/slice/masterDataSlice.js";
 import FormSelect from "../FormSelect.jsx";
 import {getSelectOptions} from "../../utils/commonUtils.js";
+import {useSelector} from "react-redux";
+import {selectFeedBackTypes} from "../../state/slice/masterDataSlice.js";
 
 // FeedbackPopup Component
-const FeedbackPopup = ({ isOpen, onClose, onAddFeedback }) => {
-  const feedbackTypes = useSelector(selectFeedBackTypes);
-
+const FeedbackPopup = ({isOpen, onClose, onAddFeedback, feedbackTypes}) => {
   const [relationship, setRelationship] = useState("");
   const [comments, setComments] = useState("");
   const [rating, setRating] = useState(0);
@@ -19,8 +17,6 @@ const FeedbackPopup = ({ isOpen, onClose, onAddFeedback }) => {
     feedbackTypeID: 0,
     comments: "",
   });
-
-
 
   useEffect(() => {
     const fetchFeedbacks = async () => {
@@ -45,7 +41,6 @@ const FeedbackPopup = ({ isOpen, onClose, onAddFeedback }) => {
           const creator = employees.find((e) => e.id === f.createdBy);
           const creatorName = creator ? `${creator.firstName} ${creator.lastName}` : "Unknown";
 
-
           return {
             id: f.id,
             name: creatorName, // <- this now shows who gave the feedback
@@ -55,9 +50,6 @@ const FeedbackPopup = ({ isOpen, onClose, onAddFeedback }) => {
             feedback: f.comments,
           };
         });
-
-
-        setFeedbackData(formatted);
       } catch (error) {
         console.error("Failed to fetch feedbacks:", error?.response?.data || error.message);
       }
@@ -174,7 +166,7 @@ const FeedbackPopup = ({ isOpen, onClose, onAddFeedback }) => {
 };
 
 // FeedbackCard Component
-const FeedbackCard = () => {
+const FeedbackCard = ({feedbackTypes}) => {
   const [feedbackData, setFeedbackData] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
@@ -196,11 +188,12 @@ const FeedbackCard = () => {
         const formatted = feedbackList.map((f) => {
           const creator = employees.find((e) => e.id === f.createdBy);
           const creatorName = creator ? `${creator.firstName} ${creator.lastName}` : "Unknown";
+          const feedbackGiverRole = feedbackTypes.find(fb => fb.id === f.feedbackType)
 
           return {
             id: f.id,
             name: creatorName,
-            role: getRelationshipName(f.feedbackType),
+            role: feedbackGiverRole?.id ? feedbackGiverRole?.name : 'Unknown',
             date: new Date(f.createdDate).toLocaleDateString(),
             rating: f.rating,
             feedback: f.comments,
@@ -214,18 +207,7 @@ const FeedbackCard = () => {
     };
 
     fetchFeedbacks();
-  }, []);
-
-
-  const getRelationshipName = (typeID) => {
-    const types = {
-      1: "Peer",
-      2: "Manager",
-      3: "Subordinate",
-      // Add more as needed
-    };
-    return types[typeID] || "Contributor";
-  };
+  }, [feedbackTypes]);
 
   const handleAddFeedback = (newFeedback) => {
     setFeedbackData((prev) => [...prev, newFeedback]);
@@ -332,6 +314,7 @@ const FeedbackCard = () => {
         isOpen={isPopupOpen}
         onClose={() => setIsPopupOpen(false)}
         onAddFeedback={handleAddFeedback}
+        feedbackTypes={feedbackTypes}
       />
     </div>
   );

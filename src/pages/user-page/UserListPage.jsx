@@ -1,40 +1,27 @@
-import React, { useEffect, useState } from "react";
+import React, {useEffect, useState} from "react";
 import SkeletonLoader from "../../components/SkeletonLoader.jsx";
-import { useDispatch, useSelector } from "react-redux";
+import {useDispatch, useSelector} from "react-redux";
 import FormSelect from "../../components/FormSelect.jsx";
 import FormInput from "../../components/FormInput.jsx";
-import { selectSelectedProject } from "../../state/slice/projectSlice.js";
+import {selectSelectedProject} from "../../state/slice/projectSlice.js";
 import ErrorAlert from "../../components/ErrorAlert.jsx";
-import {
-  ChevronRightIcon,
-  TrashIcon,
-  PencilIcon,
-} from "@heroicons/react/24/outline";
-import {
-  doGetProjectUsers,
-  setClickedUser,
-} from "../../state/slice/projectUsersSlice.js";
-import { sendInvitation } from "../../state/slice/registerSlice.js";
-import { useToasts } from "react-toast-notifications";
+import {PencilIcon,} from "@heroicons/react/24/outline";
+import {setClickedUser,} from "../../state/slice/projectUsersSlice.js";
+import {useToasts} from "react-toast-notifications";
 import axios from "axios";
-import ConfirmationDialog from "../../components/ConfirmationDialog.jsx";
 import {
   selectInitialDataError,
   selectInitialDataLoading,
   selectOrganizationUsers,
 } from "../../state/slice/appSlice.js";
 import {
-  selectUserRoles,
-  selectDesignations,
-  selectReportingManagers,
   selectDepartments,
+  selectDesignations,
   selectEmployeeStatuses,
+  selectReportingManagers,
+  selectUserRoles,
 } from "../../state/slice/masterDataSlice.js";
-import {
-  selectUser,
-  selectInitialUserDataLoading,
-  selectInitialUserDataError,
-} from "../../state/slice/authSlice.js";
+import {selectInitialUserDataError, selectInitialUserDataLoading, selectUser,} from "../../state/slice/authSlice.js";
 
 const UserListPage = () => {
   const dispatch = useDispatch();
