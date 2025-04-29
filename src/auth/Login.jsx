@@ -9,6 +9,7 @@ import LoginImage from '../images/login.png';
 import { LoginSchema } from "../state/domains/authModels.js";
 import {doGetWhoAmI} from "../state/slice/authSlice.js";
 import Spinner from "../components/Spinner.jsx";
+import Logo from "../assets/logo.png"
 
 const Login = () => {
   const { addToast } = useToasts();
@@ -74,8 +75,11 @@ const Login = () => {
   // };
  
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className='flex flex-col md:flex-row bg-white shadow-2xl rounded-2xl m-24'>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+      <div className=''>
+        <img src={Logo}  className='pt-4' alt="" />
+      </div>
+      <div className='flex flex-col md:flex-row bg-white shadow-2xl rounded-2xl m-7'>
   
         <div  className="p-10 border border-border-color"
           style={{width:"600px"}}>

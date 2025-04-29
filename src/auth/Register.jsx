@@ -8,6 +8,7 @@ import LoginImage from "../images/register.jpg";
 import { RegisterSchema } from "../state/domains/authModels";
 import { doRegisterUser } from "../state/slice/registerSlice";
 import useValidation from "../utils/use-validation";
+import Logo from "../assets/logo.png"
 
 function Register() {
   const dispatch = useDispatch();
@@ -76,8 +77,11 @@ function Register() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-    <div className="flex flex-col md:flex-row bg-white shadow-md rounded-2xl m-24">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+       <div className=''>
+              <img src={Logo}  className='pt-4' alt="" />
+            </div>
+    <div className="flex flex-col md:flex-row bg-white shadow-md rounded-2xl m-10">
       <div
         className="p-10 border border-border-color"
         style={{ width: "600px" }}

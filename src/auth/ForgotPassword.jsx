@@ -5,6 +5,7 @@ import FormInput from "../components/FormInput.jsx";
 import useValidation from "../utils/use-validation.jsx";
 import { ForgotPasswordSchema } from "../state/domains/authModels.js";
 import { useToasts } from "react-toast-notifications";
+import Logo from "../assets/logo.png"
 
 const ForgotPassword = () => {
   const history = useHistory();
@@ -64,7 +65,10 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+    <div className="flex flex-col items-center justify-center space-y-10 min-h-screen bg-gray-100">
+      <div className=''>
+              <img src={Logo}  className='pt-4' alt="" />
+            </div>
       <div
         style={{ width: "650px", height: "450px" }}
         className="bg-white text-center shadow-xl rounded-lg p-6"

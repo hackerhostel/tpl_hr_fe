@@ -4,6 +4,7 @@ import { useDispatch } from "react-redux";
 import { useToasts } from "react-toast-notifications";
 import { useHistory, useLocation } from "react-router-dom";
 import { confirmResetPassword, resetPassword } from "aws-amplify/auth";
+import Logo from "../assets/logo.png"
 
 const OTPVerification = () => {
   const history = useHistory();
@@ -146,7 +147,10 @@ const OTPVerification = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+    <div className="flex flex-col items-center justify-center min-h-screen space-y-16 bg-gray-100">
+      <div className=''>
+              <img src={Logo}  className='pt-4' alt="" />
+            </div>
       <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full mx-auto">
         <h4 className="text-2xl font-semibold text-center text-gray-800 mb-4">
           OTP Verification
