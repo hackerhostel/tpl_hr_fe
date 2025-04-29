@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { useEffect } from "react";
 import { useDispatch } from 'react-redux';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import FormInput from "../FormInput.jsx";
-import FormTextArea from "../FormTextArea.jsx";
 import axios from 'axios';
 import { useToasts } from 'react-toast-notifications';
 import { doGetWhoAmI } from "../../state/slice/authSlice.js";
+import WYSIWYGInput from "../WYSIWYGInput.jsx";
+
 
 const CreateNewRolePopup = ({ isOpen, onClose }) => {
   const dispatch = useDispatch();
@@ -21,7 +21,10 @@ const CreateNewRolePopup = ({ isOpen, onClose }) => {
   const [formErrors, setFormErrors] = useState({});
   const [isValidationErrorsShown, setIsValidationErrorsShown] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+  const [description, setDescription] = useState('');
+  const [responsibilities, setResponsibilities] = useState('');
+
+
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -38,7 +41,7 @@ const CreateNewRolePopup = ({ isOpen, onClose }) => {
     }
   };
 
- 
+
 
 
   const validateForm = () => {
@@ -94,8 +97,8 @@ const CreateNewRolePopup = ({ isOpen, onClose }) => {
     setIsSubmitting(false);
   };
 
- 
-  
+
+
 
   return (
     <>
@@ -126,26 +129,38 @@ const CreateNewRolePopup = ({ isOpen, onClose }) => {
                 </div>
                 <div>
                   <label className="text-text-color">Description</label>
-                  <FormTextArea
-                    name="description"
-                    formValues={formValues}
-                    formErrors={formErrors}
-                    onChange={handleChange}
-                    showErrors={isValidationErrorsShown}
-                    required
-                  />
+                  <div className="border border-gray-300 bg-white rounded-md mt-4 p-2">
+                    <WYSIWYGInput
+                      name="description"
+                      value={description}
+                      onchange={(name, value) => {
+                        if (typeof setDescription === 'function') {
+                          setDescription(value);
+                          setFormValues((prev) => ({ ...prev, [name]: value }));
+                        }
+                      }}
+                    />
+
+                  </div>
                 </div>
+
                 <div>
                   <label className="text-text-color">Responsibilities</label>
-                  <FormTextArea
-                    name="responsibilities"
-                    formValues={formValues}
-                    formErrors={formErrors}
-                    onChange={handleChange}
-                    showErrors={isValidationErrorsShown}
-                    required
-                  />
+                  <div className="border border-gray-300 bg-white rounded-md mt-4 p-2">
+                    <WYSIWYGInput
+                      name="responsibilities"
+                      value={responsibilities}
+                      onchange={(name, value) => {
+                        if (typeof setResponsibilities === 'function') {
+                          setResponsibilities(value);
+                          setFormValues((prev) => ({ ...prev, [name]: value }));
+                        }
+                      }}
+                    />
+
+                  </div>
                 </div>
+
               </div>
               <div className="flex space-x-4 mt-6 self-end w-full">
                 <button

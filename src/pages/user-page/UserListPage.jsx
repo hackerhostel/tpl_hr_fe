@@ -308,21 +308,12 @@ const UserListPage = () => {
             options={userOptions}
             value={selectedUser?.id || ""}
             onChange={handleUserChange}
-            placeholder="Select User"
           />
         </div>
 
         <div className="flex items-center gap-2">
           <div className="w-96 bg-white rounded-lg p-2 h-fit">
-            <div className="flex justify-between">
-              {/* Status Label - Green for active, red for inactive */}
-              {selectedUser && (
-                <div
-                  className={`px-3 py-1 rounded-md text-white text-lg ${userStatus.active ? "bg-green-500" : "bg-red-500"}`}
-                >
-                  {userStatus.label}
-                </div>
-              )}
+            <div className="flex justify-end">         
               <PencilIcon
                 onClick={toggleEditable}
                 className="w-4 text-secondary-grey cursor-pointer"
@@ -350,40 +341,11 @@ const UserListPage = () => {
               </span>
               <div className="bg-task-status-qa px-2 mt-1 rounded-md">
                 <span className="text-xs">
-                  {formValues.roleName || "N/A"} | EMP ID - {selectedUser?.id}
+                  {formValues.roleName}
                 </span>
               </div>
 
               <div className="flex gap-2 mt-5 items-center">
-                {isEditable ? (
-                  <div className="flex-1">
-                    <FormSelect
-                      name="userRole"
-                      options={userRoles.map((r) => ({
-                        label: r.name,
-                        value: String(r.id),
-                      }))}
-                      value={String(formValues.userRole)}
-                      onChange={(e) => {
-                        setSelectedRole(e.target.value);
-                        setFormValues((prev) => ({
-                          ...prev,
-                          userRole: e.target.value,
-                          roleName:
-                            userRoles.find(
-                              (r) => String(r.id) === String(e.target.value)
-                            )?.name || e.target.value,
-                        }));
-                      }}
-                      className="w-full p-2 border rounded-md h-10"
-                    />
-                  </div>
-                ) : (
-                  <div className="border border-gray-300 rounded-md flex-1 p-2">
-                    {formValues.roleName || "N/A"}
-                  </div>
-                )}
-
                 <button
                   onClick={handleInviteUser}
                   className="bg-primary-pink text-white rounded-md py-1 px-4 min-w-[100px] h-10"

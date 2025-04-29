@@ -6,7 +6,8 @@ import {
     PencilIcon,
     TrashIcon,
     ChevronLeftIcon,
-    ChevronRightIcon
+    ChevronRightIcon,
+    EllipsisVerticalIcon
 } from "@heroicons/react/24/outline";
 import FormInput from "../FormInput";
 import { useToasts } from "react-toast-notifications";
@@ -25,7 +26,7 @@ const KPISection = ({ kpis = [], refetchKPIs }) => {
     });
     const [editingKPIId, setEditingKPIId] = useState(null);
     const [editKPIData, setEditKPIData] = useState({});
-
+    const [showActionsId, setShowActionsId] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
     const rowsPerPage = 5;
 
@@ -149,7 +150,7 @@ const KPISection = ({ kpis = [], refetchKPIs }) => {
                                             description: "",
                                             formula: "",
                                             criteria: "",
-                                            targetMetrics: ""
+                                            targetMetrics: "",
                                         });
                                     }}
                                     className="w-5 h-5 text-red-600 cursor-pointer"
@@ -157,6 +158,7 @@ const KPISection = ({ kpis = [], refetchKPIs }) => {
                             </td>
                         </tr>
                     )}
+
                     {currentPageContent.map((kpi) => (
                         <tr className="border-b border-gray-200" key={kpi.id}>
                             {editingKPIId === kpi.id ? (
@@ -188,18 +190,41 @@ const KPISection = ({ kpis = [], refetchKPIs }) => {
                                     <td className="px-4 py-3">{kpi.formula}</td>
                                     <td className="px-4 py-3">{kpi.criteria}</td>
                                     <td className="px-4 py-3">{kpi.targetMetrics}</td>
-                                    <td className="px-4 py-3 flex gap-3">
-                                        <PencilIcon
-                                            onClick={() => {
-                                                setEditingKPIId(kpi.id);
-                                                setEditKPIData(kpi);
-                                            }}
-                                            className="w-5 h-5 text-blue-600 cursor-pointer"
-                                        />
-                                        <TrashIcon
-                                            onClick={() => handleDeleteKPI(kpi.id)}
-                                            className="w-5 h-5 text-red-600 cursor-pointer"
-                                        />
+                                    <td className="px-4 py-3">
+                                        {showActionsId === kpi.id ? (
+                                            <div className="flex items-center gap-3">
+                                                <PencilIcon
+                                                    className="w-5 h-5 text-text-color cursor-pointer"
+                                                    onClick={() => {
+                                                        setEditKPIData({
+                                                            name: kpi.name || "",
+                                                            description: kpi.description || "",
+                                                            formula: kpi.formula || "",
+                                                            criteria: kpi.criteria || "",
+                                                            targetMetrics: kpi.targetMetrics || "",
+                                                        });
+                                                        setEditingKPIId(kpi.id);
+                                                        setShowActionsId(null); // close actions menu
+                                                    }}
+                                                />
+                                                <TrashIcon
+                                                    className="w-5 h-5 text-text-color cursor-pointer"
+                                                    onClick={() => {
+                                                        handleDeleteKPI(kpi.id);
+                                                        setShowActionsId(null); // close actions menu
+                                                    }}
+                                                />
+                                                <XMarkIcon
+                                                    className="w-5 h-5 text-text-color cursor-pointer"
+                                                    onClick={() => setShowActionsId(null)}
+                                                />
+                                            </div>
+                                        ) : (
+                                            <EllipsisVerticalIcon
+                                                className="w-5 h-5 text-text-color cursor-pointer"
+                                                onClick={() => setShowActionsId(kpi.id)}
+                                            />
+                                        )}
                                     </td>
                                 </>
                             )}
@@ -207,6 +232,7 @@ const KPISection = ({ kpis = [], refetchKPIs }) => {
                     ))}
                 </tbody>
             </table>
+
 
             {kpiList.length > rowsPerPage && (
                 <div className="w-full flex gap-5 items-center justify-end mt-4">
