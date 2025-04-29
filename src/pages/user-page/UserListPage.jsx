@@ -313,15 +313,7 @@ const UserListPage = () => {
 
         <div className="flex items-center gap-2">
           <div className="w-96 bg-white rounded-lg p-2 h-fit">
-            <div className="flex justify-between">
-              {/* Status Label - Green for active, red for inactive */}
-              {selectedUser && (
-                <div
-                  className={`px-3 py-1 rounded-md text-white text-lg ${userStatus.active ? "bg-green-500" : "bg-red-500"}`}
-                >
-                  {userStatus.label}
-                </div>
-              )}
+            <div className="flex justify-end">         
               <PencilIcon
                 onClick={toggleEditable}
                 className="w-4 text-secondary-grey cursor-pointer"

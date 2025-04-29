@@ -114,7 +114,7 @@ const Header = () => {
         <div className="border-l border-gray-300 h-8"></div>
 
         {/* User Avatar and Menu */}
-         <Menu as="div" className="relative inline-block text-left ">
+         <Menu as="div" className="relative z-50 inline-block text-left ">
                         <Menu.Button
                           className="w-12 h-12 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-pink">
                           {userDetails.avatar ? (
@@ -141,7 +141,7 @@ const Header = () => {
                           leaveTo="transform opacity-0 scale-95"
                         >
                           <Menu.Items
-                            className="absolute -top-16 right-[1rem] mt-28 w-64 bg-white divide-y divide-gray-100 rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                            className="absolute -top-14 right-[1rem] mt-28 w-72 bg-white divide-y divide-gray-100 rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
                             <div className="flex items-center gap-3 px-4 py-3">
                               {userDetails.avatar ? (
                                 <img
