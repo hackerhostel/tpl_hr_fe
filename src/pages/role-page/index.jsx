@@ -1,6 +1,6 @@
 import MainPageLayout from '../../layouts/MainPageLayout.jsx'
 import RoleContent from "./RoleContent.jsx";
-import CreateNewProjectPopup from '../../components/popupForms/createNewRole.jsx';
+import CreateNewRole from '../../components/popupForms/createNewRole.jsx';
 import {useState} from "react";
 import RoleListPage from "./RoleListPage.jsx";
 
@@ -24,7 +24,7 @@ const ProjectLayout = () => {
       subText = {"Add New"}
       onAction = {onAddNew}
     />
-    <CreateNewProjectPopup onClose={handleClose} isOpen={isOpen}/>
+    <CreateNewRole onClose={handleClose} isOpen={isOpen}/>
     </>
 
 
