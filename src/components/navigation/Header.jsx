@@ -8,6 +8,7 @@ import {selectUser} from "../../state/slice/authSlice.js";
 import Notification from "./NotificationPopup.jsx"
 import HeaderTaskCreateComponent from "../task/create/HeaderEmployeeCreateComponent.jsx";
 import {Link, useHistory, useLocation} from 'react-router-dom';
+import Logo from "../../assets/logo.png"
 
 const Header = () => {
   const dispatch = useDispatch();
@@ -85,7 +86,10 @@ const Header = () => {
 
   return (
     <div className="flex justify-between h-16 w-full">
-        <div className="flex space-x-8 text-text-color text-lg ml-72 py-3 px-4 ">
+      <div className="py-1  ml-3">
+      <img src={Logo} className="w-48 h-6 m-2" alt="" />
+      </div> 
+        <div className="flex space-x-8 text-text-color text-lg mr-96 py-3 px-4 ">
             <MenuItem link="/dashboard" label="Dashboard"/>
             <MenuItem link="/employee" label="Employee"/>
             <MenuItem link="/role" label="Role"/>
@@ -114,7 +118,7 @@ const Header = () => {
         <div className="border-l border-gray-300 h-8"></div>
 
         {/* User Avatar and Menu */}
-         <Menu as="div" className="relative z-50 inline-block text-left ">
+         <Menu as="div" className="relative inline-block text-left ">
                         <Menu.Button
                           className="w-12 h-12 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-pink">
                           {userDetails.avatar ? (
@@ -141,7 +145,7 @@ const Header = () => {
                           leaveTo="transform opacity-0 scale-95"
                         >
                           <Menu.Items
-                            className="absolute -top-14 right-[1rem] mt-28 w-72 bg-white divide-y divide-gray-100 rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                            className="absolute -top-14 z-50 right-[1rem] mt-28 w-72 bg-white divide-y divide-gray-100 rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
                             <div className="flex items-center gap-3 px-4 py-3">
                               {userDetails.avatar ? (
                                 <img

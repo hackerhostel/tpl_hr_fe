@@ -5,6 +5,8 @@ import { useToasts } from "react-toast-notifications";
 import FormInput from "../components/FormInput.jsx";
 import useValidation from "../utils/use-validation.jsx";
 import * as yup from "yup";
+import Logo from "../assets/logo.png"
+
 
 const ResetPasswordSchema = yup.object({
   newPassword: yup
@@ -77,7 +79,10 @@ const ResetPassword = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+    <div className="flex flex-col items-center justify-center space-y-12 min-h-screen bg-gray-100">
+        <div className=''>
+              <img src={Logo}  className='pt-4' alt="" />
+            </div>
       <div
         className="bg-white text-center shadow-xl rounded-lg p-6"
         style={{ width: "650px" }}
