@@ -1,7 +1,6 @@
 import {Redirect, Route, Switch} from "react-router-dom";
 import Header from "../components/navigation/Header.jsx";
-import ProjectLayout from "./role-page/index.jsx";
-import UserLayout from "./user-page/index.jsx";
+import EmployeeLayout from "./user-page/index.jsx";
 import {useDispatch, useSelector} from "react-redux";
 import React, {useEffect} from "react";
 import {doGetWhoAmI, selectInitialUserDataError, selectInitialUserDataLoading} from "../state/slice/authSlice.js";
@@ -12,6 +11,7 @@ import DashboardLayout from "./dashboard-page/index.jsx";
 import {doGetProjectBreakdown, selectSelectedProject} from "../state/slice/projectSlice.js";
 import {isNotEmptyObj} from "../utils/commonUtils.js";
 import {doGetMasterData, selectInitialDataError, selectInitialDataLoading} from "../state/slice/appSlice.js";
+import RoleLayout from "./role-page/index.jsx";
 
 const Dashboard = () => {
   const isInitialAppDataError = useSelector(selectInitialDataError);
@@ -46,22 +46,17 @@ const Dashboard = () => {
               <DashboardLayout />
             </Route>
 
-            <Route path="/projects">
-              <ProjectLayout/>
+            <Route path="/role">
+              <RoleLayout/>
             </Route>
 
-            <Route path="/profile">
-              <UserLayout />
+            <Route path="/employee">
+              <EmployeeLayout/>
             </Route>
 
-            <Route path="/test-plans/:test_plan_id">
+            <Route path="/reviews">
               <PerformanceLayout/>
             </Route>
-
-            <Route path="/test-plans">
-              <PerformanceLayout/>
-            </Route>
-
 
             <Route exact path="/">
               <Redirect

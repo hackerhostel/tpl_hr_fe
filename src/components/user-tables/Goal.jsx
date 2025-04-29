@@ -1,26 +1,29 @@
-import React, { useEffect, useState } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import React, {useEffect, useState} from "react";
+import {useDispatch, useSelector} from "react-redux";
 import {
     CheckBadgeIcon,
-    EllipsisVerticalIcon,
-    PlusCircleIcon,
     ChevronLeftIcon,
     ChevronRightIcon,
+    EllipsisVerticalIcon,
     PencilIcon,
+    PlusCircleIcon,
     TrashIcon,
     XMarkIcon,
 } from "@heroicons/react/24/outline";
 import FormInput from "../FormInput";
 import FormSelect from "../FormSelect"
-import { useToasts } from "react-toast-notifications";
-import { selectEmployeeStatuses, selectTrainingLevels, doGetFormData, selectDevelopmentPlans } from "../../state/slice/masterDataSlice";
+import {useToasts} from "react-toast-notifications";
+import {
+    doGetFormData,
+    selectDevelopmentPlans,
+    selectEmployeeStatuses,
+    selectTrainingLevels
+} from "../../state/slice/masterDataSlice";
 import axios from "axios";
 
-
-const GoalsSection = ({ refetchGoals }) => {
+const GoalsSection = ({selectedUser, goals, reFetchEmployee}) => {
     const { addToast } = useToasts();
 
-    const [goalList, setGoalList] = useState([]);
     const [showActionsId, setShowActionsId] = useState(null);
     const [addingNew, setAddingNew] = useState(false);
     const [newGoal, setNewGoal] = useState({ name: "", targetDate: "", statusID: "", comments: "" });
@@ -33,10 +36,10 @@ const GoalsSection = ({ refetchGoals }) => {
     const rowsPerPage = 5;
     const dispatch = useDispatch();
 
-    const totalPages = Math.ceil(goalList.length / rowsPerPage);
+    const totalPages = Math.ceil(goals.length / rowsPerPage);
     const indexOfLast = currentPage * rowsPerPage;
     const indexOfFirst = indexOfLast - rowsPerPage;
-    const currentPageContent = goalList.slice(indexOfFirst, indexOfLast);
+    const currentPageContent = goals.slice(indexOfFirst, indexOfLast);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -46,33 +49,10 @@ const GoalsSection = ({ refetchGoals }) => {
           setNewGoal((prev) => ({ ...prev, [name]: value }));
         }
       };
-      
-
 
     useEffect(() => {
         dispatch(doGetFormData());
     }, [dispatch]);
-
-
-
-
-    const fetchGoals = async () => {
-        try {
-            const whoamiRes = await axios.get("/employees/who-am-i");
-            const employeeID = whoamiRes?.data?.body?.userDetails?.id;
-
-            const res = await axios.get(`/employees/${employeeID}`);
-            const goals = res?.data?.body?.goals || [];
-
-            setGoalList(goals);
-        } catch (error) {
-            console.error("Failed to fetch goals:", error?.response?.data || error.message);
-        }
-    };
-
-    useEffect(() => {
-        fetchGoals();
-    }, []);
 
     const handleAddGoal = async () => {
         if (!newGoal.name || !newGoal.targetDate) {
@@ -81,53 +61,40 @@ const GoalsSection = ({ refetchGoals }) => {
         }
 
         try {
-            const whoamiRes = await axios.get("/employees/who-am-i");
-            const employeeID = whoamiRes?.data?.body?.userDetails?.id;
-            const email = whoamiRes?.data?.body?.userDetails?.email;
-
             const payload = {
                 goal: {
                     name: newGoal.name,
                     targetDate: newGoal.targetDate,
                     comments: newGoal.comments,
                     statusID: parseInt(newGoal.statusID) || 1,
-                    employeeID: employeeID,
                 },
-                createdBy: email
             };
 
-            const response = await axios.post(`/employees/${employeeID}/goals`, payload);
+            const response = await axios.post(`/employees/${selectedUser.id}/goals`, payload);
 
             if (response?.data?.goalID) {
                 addToast("Goal added successfully", { appearance: "success" });
                 setAddingNew(false);
                 setNewGoal({ name: "", targetDate: "", statusID: "", comments: "" });
-                fetchGoals();
-            } else {
-                throw new Error("Goal ID not returned");
+                reFetchEmployee()
             }
         } catch (err) {
             console.error("Goal Add Error:", err);
-            addToast("Failed to add goal", { appearance: "error" });
+            addToast("Failed to add the goal", {appearance: "error"});
         }
     };
 
     const handleEditGoal = async (goalId) => {
         try {
-            const whoamiRes = await axios.get("/employees/who-am-i");
-            const employeeID = whoamiRes?.data?.body?.userDetails?.id;
-            const email = whoamiRes?.data?.body?.userDetails?.email;
-
             const payload = {
                 goal: {
                     ...editGoalData,
-                    employeeID: employeeID,
+                    employeeID: selectedUser.id,
                     statusID: parseInt(editGoalData.statusID),
                 },
-                updatedBy: email
             };
 
-            const response = await axios.put(`/employees/${employeeID}/goals/${goalId}`, payload);
+            const response = await axios.put(`/employees/${selectedUser.id}/goals/${goalId}`, payload);
 
             console.log("Edit Goal Response:", response); // <-- this will show us the truth
 
@@ -156,22 +123,16 @@ const GoalsSection = ({ refetchGoals }) => {
         return [];
     };
 
-
-
-
     const handleDeleteGoal = async (goalId) => {
         try {
-            const whoamiRes = await axios.get("/employees/who-am-i");
-            const employeeID = whoamiRes?.data?.body?.userDetails?.id;
-
-            const response = await axios.delete(`/employees/${employeeID}/goals/${goalId}`);
+            const response = await axios.delete(`/employees/${selectedUser.id}/goals/${goalId}`);
             if (response?.data?.success) {
                 addToast("Goal deleted successfully", { appearance: "success" });
-                await fetchGoals();
+                reFetchEmployee();
             }
         } catch (err) {
             console.error("Delete Goal Error:", err);
-            addToast("Failed to delete goal", { appearance: "error" });
+            addToast("Failed to delete the goal", { appearance: "error" });
         }
     };
 
@@ -335,7 +296,7 @@ const GoalsSection = ({ refetchGoals }) => {
                 </tbody>
             </table>
 
-            {goalList.length > rowsPerPage && (
+            {goals.length > rowsPerPage && (
                 <div className="w-full flex gap-5 items-center justify-end mt-4">
                     <button
                         onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}

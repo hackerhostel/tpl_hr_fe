@@ -4,7 +4,7 @@ import CreateNewRole from '../../components/popupForms/createNewRole.jsx';
 import {useState} from "react";
 import RoleListPage from "./RoleListPage.jsx";
 
-const ProjectLayout = () => {
+const RoleLayout = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   const onAddNew = () => {
@@ -31,4 +31,4 @@ const ProjectLayout = () => {
   );
 }
 
-export default ProjectLayout;
+export default RoleLayout;

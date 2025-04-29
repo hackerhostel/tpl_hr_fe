@@ -10,6 +10,7 @@ const initialState = {
   reportingManagers: [],
   trainingLevels: [],
   developmentPlans: [],
+  feedBackTypes:[],
   isFormDataLoading: false,
   isFormDataLoadingError: false,
 };
@@ -20,7 +21,6 @@ export const doGetMasterData = createAsyncThunk(
     try {
       const response = await axios.get("/organizations/master-data");
       const responseData = response.data || {};
-
 
       if (responseData) {
         return {
@@ -46,15 +46,12 @@ export const doGetFormData = createAsyncThunk(
       const response = await axios.get("/employees/form-data");
       const responseData = response.data?.body;
 
-
-
       if (responseData) {
-        const trainingLevels = responseData.trainingLevels || [];
-        const developmentPlans = responseData.developmentPlans || [];
+        const trainingLevels = responseData?.trainingLevels || [];
+        const developmentPlans = responseData?.developmentPlans || [];
+        const feedBackTypes = responseData?.feedbackTypes || [];
 
-       
-
-        return { trainingLevels, developmentPlans };
+        return { trainingLevels, developmentPlans, feedBackTypes };
       } else {
         return thunkApi.rejectWithValue("Form data not found");
       }
@@ -123,9 +120,10 @@ export const masterDataSlice = createSlice({
         state.isFormDataLoading = true;
       })
       .addCase(doGetFormData.fulfilled, (state, action) => {
-        const { trainingLevels, developmentPlans } = action.payload;
+        const { trainingLevels, developmentPlans, feedBackTypes } = action.payload;
         state.trainingLevels = trainingLevels;
         state.developmentPlans = developmentPlans;
+        state.feedBackTypes = feedBackTypes;
         state.isFormDataLoading = false;
         state.isFormDataLoadingError = false;
       })
@@ -145,6 +143,7 @@ export const selectTrainingLevels = (state) => state?.masterData?.trainingLevels
 export const selectDevelopmentPlans = (state) => state?.masterData?.developmentPlans;
 export const selectEmployeeStatuses = (state) => state?.masterData?.employeeStatuses;
 export const selectReportingManagers = (state) => state?.masterData?.reportingManagers;
+export const selectFeedBackTypes = (state) => state?.masterData?.feedBackTypes;
 export const selectIsFormDataLoading = (state) => state?.masterData?.isFormDataLoading;
 export const selectIsFormDataLoadingError = (state) => state?.masterData?.isFormDataLoadingError;
 
