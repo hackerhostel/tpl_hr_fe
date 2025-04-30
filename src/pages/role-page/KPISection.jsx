@@ -28,8 +28,8 @@ const KPISection = ({
     });
     const [showNewRow, setShowNewRow] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
-     const [showActionsId, setShowActionsId] = useState(null);
-
+    const [showActionsId, setShowActionsId] = useState(null);
+    const [confirmDeleteId, setConfirmDeleteId] = useState(null);
     const rowsPerPage = 5;
     const totalPages = kpis && kpis.length ? Math.ceil(kpis.length / rowsPerPage) : 0;
     const indexOfLastTask = currentPage * rowsPerPage;
@@ -137,6 +137,10 @@ const KPISection = ({
             }
         };
 
+        const confirmDeleteKPI = (kpiID) => {
+            setConfirmDeleteId(kpiID);
+        };
+
         const handleDeleteKPI = async () => {
             try {
                 const response = await axios.delete(`designations/${roleId}/kpis/${kpi?.id}`)
@@ -177,14 +181,14 @@ const KPISection = ({
                                                 targetMetrics: kpi.targetMetrics || "",
                                             });
                                             setEditingKPIId(kpi.id);
-                                            setShowActionsId(null); 
+                                            setShowActionsId(null);
                                         }}
                                     />
                                     <TrashIcon
                                         className="w-5 h-5 text-text-color cursor-pointer"
                                         onClick={() => {
-                                            handleDeleteKPI(kpi.id);
-                                            setShowActionsId(null); 
+                                            confirmDeleteKPI(kpi.id);
+                                            setShowActionsId(null);
                                         }}
                                     />
                                     <XMarkIcon
@@ -257,6 +261,29 @@ const KPISection = ({
             </tr>
         );
     };
+
+    {confirmDeleteId && (
+        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+            <div className="bg-white rounded-md p-6 w-96 shadow-lg">
+                <h2 className="text-lg font-semibold mb-4 text-gray-800">Confirm Deletion</h2>
+                <p className="mb-6 text-sm text-gray-600">Are you sure you want to delete this KPI? This action cannot be undone.</p>
+                <div className="flex justify-end space-x-3">
+                    <button
+                        onClick={() => setConfirmDeleteId(null)}
+                        className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 text-sm"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        onClick={handleDeleteKPI}
+                        className="px-4 py-2 rounded bg-primary-pink text-white text-sm"
+                    >
+                        Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    )}
 
     return (
         <div className="bg-white">
