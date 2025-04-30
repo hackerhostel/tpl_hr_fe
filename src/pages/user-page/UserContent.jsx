@@ -20,6 +20,7 @@ const UserContent = () => {
     const [kpis, setKPIs] = useState([]);
     const [competencies, setCompetencies] = useState([]);
     const [goals, setGoals] = useState([]);
+    const [certifications, setCertifications] = useState([]);
 
     const {data: employeeResponse, refetch: reFetchEmployee} = useFetchEmployee(selectedUser?.id ? selectedUser?.id : 0)
 
@@ -36,7 +37,6 @@ const UserContent = () => {
     }, [feedbackTypes]);
 
     useEffect(() => {
-        console.log(employeeResponse)
         if (employeeResponse?.kpi && employeeResponse?.kpi.length) {
             setKPIs(employeeResponse?.kpi)
         }else{
@@ -51,6 +51,11 @@ const UserContent = () => {
             setGoals(employeeResponse?.goals)
         } else {
             setGoals([])
+        }
+        if (employeeResponse?.certifications && employeeResponse?.certifications.length) {
+            setCertifications(employeeResponse?.certifications)
+        } else {
+            setCertifications([])
         }
     }, [employeeResponse]);
 
@@ -74,7 +79,8 @@ const UserContent = () => {
                     <Goal selectedUser={selectedUser} goals={goals} reFetchEmployee={reFetchEmployee}/>
                 </div>
                 <div className='mt-2'>
-                    <Certification/>
+                    <Certification selectedUser={selectedUser} reFetchEmployee={reFetchEmployee}
+                                   certifications={certifications}/>
                 </div>
             </div>
         </div>
