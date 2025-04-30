@@ -1,5 +1,5 @@
-import React, {useEffect, useState} from "react";
-import {useDispatch, useSelector} from "react-redux";
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import {
     CheckBadgeIcon,
     ChevronLeftIcon,
@@ -12,7 +12,7 @@ import {
 } from "@heroicons/react/24/outline";
 import FormInput from "../FormInput";
 import FormSelect from "../FormSelect"
-import {useToasts} from "react-toast-notifications";
+import { useToasts } from "react-toast-notifications";
 import {
     doGetFormData,
     selectDevelopmentPlans,
@@ -20,9 +20,9 @@ import {
     selectTrainingLevels
 } from "../../state/slice/masterDataSlice";
 import axios from "axios";
-import {getSelectOptions} from "../../utils/commonUtils.js";
+import { getSelectOptions } from "../../utils/commonUtils.js";
 
-const GoalsSection = ({selectedUser, goals, reFetchEmployee}) => {
+const GoalsSection = ({ selectedUser, goals, reFetchEmployee }) => {
     const { addToast } = useToasts();
 
     const [showActionsId, setShowActionsId] = useState(null);
@@ -30,6 +30,7 @@ const GoalsSection = ({selectedUser, goals, reFetchEmployee}) => {
     const [newGoal, setNewGoal] = useState({ name: "", targetDate: "", statusID: "", comments: "" });
     const [editingGoalId, setEditingGoalId] = useState(null);
     const [editGoalData, setEditGoalData] = useState({});
+    const [confirmDeleteId, setConfirmDeleteId] = useState(null);
     const employeeStatuses = useSelector(selectEmployeeStatuses);
     const trainingLevels = useSelector(selectTrainingLevels);
     const developmentPlans = useSelector(selectDevelopmentPlans);
@@ -45,11 +46,11 @@ const GoalsSection = ({selectedUser, goals, reFetchEmployee}) => {
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         if (editingGoalId !== null) {
-          setEditGoalData((prev) => ({ ...prev, [name]: value }));
+            setEditGoalData((prev) => ({ ...prev, [name]: value }));
         } else {
-          setNewGoal((prev) => ({ ...prev, [name]: value }));
+            setNewGoal((prev) => ({ ...prev, [name]: value }));
         }
-      };
+    };
 
     useEffect(() => {
         dispatch(doGetFormData());
@@ -81,7 +82,7 @@ const GoalsSection = ({selectedUser, goals, reFetchEmployee}) => {
             }
         } catch (err) {
             console.error("Goal Add Error:", err);
-            addToast("Failed to add the goal", {appearance: "error"});
+            addToast("Failed to add the goal", { appearance: "error" });
         }
     };
 
@@ -110,6 +111,10 @@ const GoalsSection = ({selectedUser, goals, reFetchEmployee}) => {
         }
     };
 
+    const confirmDeleteGoal = (goalID) => {
+        setConfirmDeleteId(goalID);
+    };
+
     const handleDeleteGoal = async (goalId) => {
         try {
             const response = await axios.delete(`/employees/${selectedUser.id}/goals/${goalId}`);
@@ -117,7 +122,7 @@ const GoalsSection = ({selectedUser, goals, reFetchEmployee}) => {
                 addToast("Goal deleted successfully", { appearance: "success" });
                 setShowActionsId(null);
                 reFetchEmployee();
-            }else{
+            } else {
                 addToast("Failed to delete the goal", { appearance: "error" });
             }
         } catch (err) {
@@ -155,7 +160,7 @@ const GoalsSection = ({selectedUser, goals, reFetchEmployee}) => {
                                     {["statusID"].includes(field) ? (
                                         <FormSelect
                                             name={field}
-                                            options={getSelectOptions(field === "statusID" ? employeeStatuses : developmentPlans )}
+                                            options={getSelectOptions(field === "statusID" ? employeeStatuses : developmentPlans)}
                                             formValues={newGoal}
                                             onChange={(e) => handleInputChange(e)}
                                             showErrors={false}
@@ -177,7 +182,7 @@ const GoalsSection = ({selectedUser, goals, reFetchEmployee}) => {
                                 <XMarkIcon
                                     onClick={() => {
                                         setAddingNew(false);
-                                        setNewGoal({ name: "", targetDate: "", statusID: "", comments: ""});
+                                        setNewGoal({ name: "", targetDate: "", statusID: "", comments: "" });
                                     }}
                                     className="w-5 h-5 text-red-600 cursor-pointer"
                                 />
@@ -200,13 +205,13 @@ const GoalsSection = ({selectedUser, goals, reFetchEmployee}) => {
                                                     showErrors={false}
                                                     required
                                                 />
-                                    ) : (
-                                        <FormInput
-                                        type={field === "targetDate" ? "date" : "text"}
-                                        name={field}
-                                        formValues={{ [field]: editGoalData[field] }}
-                                        onChange={(e) => handleInputChange(e)}
-                                      />
+                                            ) : (
+                                                <FormInput
+                                                    type={field === "targetDate" ? "date" : "text"}
+                                                    name={field}
+                                                    formValues={{ [field]: editGoalData[field] }}
+                                                    onChange={(e) => handleInputChange(e)}
+                                                />
 
                                             )}
                                         </td>
@@ -233,7 +238,7 @@ const GoalsSection = ({selectedUser, goals, reFetchEmployee}) => {
                                     </td>
 
                                     <td className="px-4 py-3">{goal.comments}</td>
-                                 
+
 
                                     <td className="px-4 py-3 flex gap-3">
                                         {showActionsId === goal.id ? (
@@ -245,7 +250,7 @@ const GoalsSection = ({selectedUser, goals, reFetchEmployee}) => {
                                                             name: goal.name || "",
                                                             targetDate: goal.targetDate.split("T")[0] || "",
                                                             statusID: goal.statusID || "",
-                                                            comments: goal.comments || ""                                
+                                                            comments: goal.comments || ""
                                                         });
                                                         setEditingGoalId(goal.id);
                                                         setShowActionsId(null);
@@ -254,7 +259,7 @@ const GoalsSection = ({selectedUser, goals, reFetchEmployee}) => {
 
                                                 <TrashIcon
                                                     className="w-5 h-5 text-text-color cursor-pointer"
-                                                    onClick={() => handleDeleteGoal(goal.id)}
+                                                    onClick={() => confirmDeleteGoal(goal.id)}
                                                 />
                                                 <XMarkIcon
                                                     className="w-5 h-5 text-text-color cursor-pointer"
@@ -274,6 +279,30 @@ const GoalsSection = ({selectedUser, goals, reFetchEmployee}) => {
                     ))}
                 </tbody>
             </table>
+
+
+            {confirmDeleteId && (
+                <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-md p-6 w-96 shadow-lg">
+                        <h2 className="text-lg font-semibold mb-4 text-gray-800">Confirm Deletion</h2>
+                        <p className="mb-6 text-sm text-gray-600">Are you sure you want to delete this Goal? This action cannot be undone.</p>
+                        <div className="flex justify-end space-x-3">
+                            <button
+                                onClick={() => setConfirmDeleteId(null)}
+                                className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 text-sm"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleDeleteGoal}
+                                className="px-4 py-2 rounded bg-primary-pink text-white text-sm"
+                            >
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {goals.length > rowsPerPage && (
                 <div className="w-full flex gap-5 items-center justify-end mt-4">

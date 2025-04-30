@@ -1,5 +1,5 @@
-import React, {useState} from "react";
-import {useSelector} from "react-redux";
+import React, { useState } from "react";
+import { useSelector } from "react-redux";
 import {
     CheckBadgeIcon,
     ChevronLeftIcon,
@@ -12,17 +12,19 @@ import {
 } from "@heroicons/react/24/outline";
 import FormInput from "../FormInput";
 import FormSelect from "../FormSelect"
-import {useToasts} from "react-toast-notifications";
+import { useToasts } from "react-toast-notifications";
 import axios from "axios";
-import {selectTrainingLevels} from "../../state/slice/masterDataSlice";
-import {getSelectOptions} from "../../utils/commonUtils.js";
+import { selectTrainingLevels } from "../../state/slice/masterDataSlice";
+import { getSelectOptions } from "../../utils/commonUtils.js";
 
-const CertificationSection = ({selectedUser, certifications, reFetchEmployee}) => {
+const CertificationSection = ({ selectedUser, certifications, reFetchEmployee }) => {
     const { addToast } = useToasts();
     const [addingNew, setAddingNew] = useState(false);
     const [showActionsId, setShowActionsId] = useState(null);
     const [editingId, setEditingId] = useState(null);
     const [editRow, setEditRow] = useState({});
+    const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+
     const [newCert, setNewCert] = useState({
         name: "",
         certification: "",
@@ -50,12 +52,12 @@ const CertificationSection = ({selectedUser, certifications, reFetchEmployee}) =
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         if (editingCertId !== null) {
-          setEditCertData((prev) => ({ ...prev, [name]: value }));
+            setEditCertData((prev) => ({ ...prev, [name]: value }));
         } else {
-          setNewCert((prev) => ({ ...prev, [name]: value }));
+            setNewCert((prev) => ({ ...prev, [name]: value }));
         }
-      };
-      
+    };
+
 
     const handleAddCertification = async () => {
         if (!newCert.name || !newCert.certification) {
@@ -82,7 +84,7 @@ const CertificationSection = ({selectedUser, certifications, reFetchEmployee}) =
                     trainingStatusID: ""
                 });
             } else {
-                addToast("Failed to add certification", {appearance: "error"});
+                addToast("Failed to add certification", { appearance: "error" });
             }
         } catch (err) {
             console.error(err);
@@ -112,7 +114,7 @@ const CertificationSection = ({selectedUser, certifications, reFetchEmployee}) =
                 reFetchEmployee()
                 setEditingCertId(null);
             } else {
-                addToast("Failed to update certification", {appearance: "error"});
+                addToast("Failed to update certification", { appearance: "error" });
             }
         } catch (err) {
             console.error("Update error:", err);
@@ -121,22 +123,27 @@ const CertificationSection = ({selectedUser, certifications, reFetchEmployee}) =
     };
 
 
+    const confirmDeleteCertification = (certificationID) => {
+        setConfirmDeleteId(certificationID);
+    };
 
-    const handleDeleteCertification = async (certificationID) => {
+    const handleConfirmedDelete = async () => {
         try {
-            const res = await axios.delete(`/employees/${selectedUser.id}/certifications/${certificationID}`);
-
+            const res = await axios.delete(`/employees/${selectedUser.id}/certifications/${confirmDeleteId}`);
             if (res?.status === 200) {
                 addToast("Certification deleted successfully", { appearance: "success" });
-                reFetchEmployee()
+                reFetchEmployee();
             } else {
                 addToast("Failed to delete certification", { appearance: "error" });
             }
         } catch (error) {
             console.error("Delete error:", error);
             addToast("Failed to delete certification", { appearance: "error" });
+        } finally {
+            setConfirmDeleteId(null); // close modal
         }
     };
+
 
     return (
         <div className="w-full mt-8 px-6 py-4 bg-white rounded-md">
@@ -224,25 +231,25 @@ const CertificationSection = ({selectedUser, certifications, reFetchEmployee}) =
                                 {isEditing ? (
                                     <>
                                         {["name", "certification", "dueDate", "expireDate", "trainingStatusID", "institution"].map((field) => (
-                                           <td className="px-4 py-3" key={field}>
-                                           {field === "trainingStatusID" ? (
-                                               <FormSelect
-                                                   name={field}
-                                                   options={getSelectOptions(trainingStatus)}
-                                                   formValues={editCertData}
-                                                   onChange={(e) => handleInputChange(e, false)}
-                                                   showErrors={false}
-                                                   required
-                                               />
-                                           ) : (
-                                               <FormInput
-                                                   type={field.includes("Date") ? "date" : "text"}
-                                                   name={field}
-                                                   formValues={{ [field]: editCertData[field] }}
-                                                   onChange={(e) => handleInputChange(e, false)}
-                                               />
-                                           )}
-                                       </td>
+                                            <td className="px-4 py-3" key={field}>
+                                                {field === "trainingStatusID" ? (
+                                                    <FormSelect
+                                                        name={field}
+                                                        options={getSelectOptions(trainingStatus)}
+                                                        formValues={editCertData}
+                                                        onChange={(e) => handleInputChange(e, false)}
+                                                        showErrors={false}
+                                                        required
+                                                    />
+                                                ) : (
+                                                    <FormInput
+                                                        type={field.includes("Date") ? "date" : "text"}
+                                                        name={field}
+                                                        formValues={{ [field]: editCertData[field] }}
+                                                        onChange={(e) => handleInputChange(e, false)}
+                                                    />
+                                                )}
+                                            </td>
                                         ))}
                                         <td className="px-4 py-3 flex gap-3">
                                             <CheckBadgeIcon
@@ -284,8 +291,9 @@ const CertificationSection = ({selectedUser, certifications, reFetchEmployee}) =
 
                                                     <TrashIcon
                                                         className="w-5 h-5 text-text-color cursor-pointer"
-                                                        onClick={() => handleDeleteCertification(cert.id)}
+                                                        onClick={() => confirmDeleteCertification(cert.id)}
                                                     />
+
                                                     <XMarkIcon
                                                         className="w-5 h-5 text-text-color cursor-pointer"
                                                         onClick={() => setShowActionsId(null)}
@@ -306,6 +314,30 @@ const CertificationSection = ({selectedUser, certifications, reFetchEmployee}) =
 
                 </tbody>
             </table>
+
+            {confirmDeleteId && (
+                <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-md p-6 w-96 shadow-lg">
+                        <h2 className="text-lg font-semibold mb-4 text-gray-800">Confirm Deletion</h2>
+                        <p className="mb-6 text-sm text-gray-600">Are you sure you want to delete this certification? This action cannot be undone.</p>
+                        <div className="flex justify-end space-x-3">
+                            <button
+                                onClick={() => setConfirmDeleteId(null)}
+                                className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 text-sm"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleConfirmedDelete}
+                                className="px-4 py-2 rounded bg-primary-pink text-white text-sm"
+                            >
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
 
             {certifications.length > rowsPerPage && (
                 <div className="w-full flex gap-5 items-center justify-end mt-4">

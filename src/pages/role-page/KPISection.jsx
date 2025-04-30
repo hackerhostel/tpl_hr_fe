@@ -28,8 +28,8 @@ const KPISection = ({
     });
     const [showNewRow, setShowNewRow] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
-     const [showActionsId, setShowActionsId] = useState(null);
-
+    const [showActionsId, setShowActionsId] = useState(null);
+    const [confirmDeleteId, setConfirmDeleteId] = useState(null);
     const rowsPerPage = 5;
     const totalPages = kpis && kpis.length ? Math.ceil(kpis.length / rowsPerPage) : 0;
     const indexOfLastTask = currentPage * rowsPerPage;
@@ -115,10 +115,14 @@ const KPISection = ({
             setEditRow({ ...editRow, [name]: isText ? value : Number(value) });
         };
 
+
+
         const onHideEdit = () => {
             setIsEditing(false)
             setEditRow(initialData)
         }
+
+
 
         const handleUpdateKPI = async () => {
             try {
@@ -137,22 +141,26 @@ const KPISection = ({
             }
         };
 
-        const handleDeleteKPI = async () => {
+
+
+
+        const handleDeleteKPI = async (kpiId) => {
             try {
-                const response = await axios.delete(`designations/${roleId}/kpis/${kpi?.id}`)
-                const deleted = response?.status
+                const response = await axios.delete(`designations/${roleId}/kpis/${kpiId}`);
+                const deleted = response?.status;
 
                 if (deleted) {
                     addToast('KPI Successfully Deleted', { appearance: 'success' });
-                    reFetchRole()
+                    reFetchRole();
                 } else {
                     addToast('Failed To Delete The KPI', { appearance: 'error' });
                 }
             } catch (error) {
-                console.log(error)
+                console.log(error);
                 addToast('Failed To Delete The KPI', { appearance: 'error' });
             }
         };
+
 
         return (
             <tr className="border-b border-gray-200">
@@ -177,16 +185,17 @@ const KPISection = ({
                                                 targetMetrics: kpi.targetMetrics || "",
                                             });
                                             setEditingKPIId(kpi.id);
-                                            setShowActionsId(null); 
+                                            setShowActionsId(null);
                                         }}
                                     />
                                     <TrashIcon
                                         className="w-5 h-5 text-text-color cursor-pointer"
                                         onClick={() => {
-                                            handleDeleteKPI(kpi.id);
-                                            setShowActionsId(null); 
+                                            confirmDeleteKPI(kpi.id);
+                                            setShowActionsId(null);
                                         }}
                                     />
+
                                     <XMarkIcon
                                         className="w-5 h-5 text-text-color cursor-pointer"
                                         onClick={() => setShowActionsId(null)}
@@ -257,6 +266,8 @@ const KPISection = ({
             </tr>
         );
     };
+
+
 
     return (
         <div className="bg-white">
@@ -341,6 +352,35 @@ const KPISection = ({
                             ))}
                         </tbody>
                     </table>
+
+                    {confirmDeleteId && (
+                        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+                            <div className="bg-white rounded-md p-6 w-96 shadow-lg">
+                                <h2 className="text-lg font-semibold mb-4 text-gray-800">Confirm Deletion</h2>
+                                <p className="mb-6 text-sm text-gray-600">
+                                    Are you sure you want to delete this KPI? This action cannot be undone.
+                                </p>
+                                <div className="flex justify-end space-x-3">
+                                    <button
+                                        onClick={() => setConfirmDeleteId(null)}
+                                        className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 text-sm"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            handleDeleteKPI(confirmDeleteId);
+                                            setConfirmDeleteId(null);
+                                        }}
+                                        className="px-4 py-2 rounded bg-primary-pink text-white text-sm"
+                                    >
+                                        Delete
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {(kpis && kpis.length > 0) && (
                         <div className="w-full flex gap-5 items-center justify-end mt-4 mb-4">
                             <button
@@ -367,5 +407,7 @@ const KPISection = ({
         </div>
     );
 };
+
+
 
 export default KPISection;
