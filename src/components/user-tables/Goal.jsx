@@ -20,6 +20,7 @@ import {
     selectTrainingLevels
 } from "../../state/slice/masterDataSlice";
 import axios from "axios";
+import {getSelectOptions} from "../../utils/commonUtils.js";
 
 const GoalsSection = ({selectedUser, goals, reFetchEmployee}) => {
     const { addToast } = useToasts();
@@ -89,46 +90,35 @@ const GoalsSection = ({selectedUser, goals, reFetchEmployee}) => {
             const payload = {
                 goal: {
                     ...editGoalData,
-                    employeeID: selectedUser.id,
                     statusID: parseInt(editGoalData.statusID),
                 },
             };
 
             const response = await axios.put(`/employees/${selectedUser.id}/goals/${goalId}`, payload);
 
-            console.log("Edit Goal Response:", response); // <-- this will show us the truth
-
             // TEMPORARY: just check for status code for now
             if (response?.status === 200) {
                 addToast("Goal updated successfully", { appearance: "success" });
                 setEditingGoalId(null);
-                fetchGoals();
+                reFetchEmployee();
             } else {
-                throw new Error("Update response didn't indicate success");
+                addToast("Failed to update the goal", { appearance: "error" });
             }
         } catch (err) {
             console.error("Edit Goal Error:", err);
-            addToast("Failed to update goal", { appearance: "error" });
+            addToast("Failed to update the goal", { appearance: "error" });
         }
-    };
-
-    const getSelectOptions = (options, labelKey = "name") => {
-        if (options && options.length) {
-            return options.map((o) => {
-                const value = Number(o?.id || o?.rID || o?.checklistID);
-                const label = o?.[labelKey] || o?.value || o?.title || "Unnamed";
-                return { value, label };
-            });
-        }
-        return [];
     };
 
     const handleDeleteGoal = async (goalId) => {
         try {
             const response = await axios.delete(`/employees/${selectedUser.id}/goals/${goalId}`);
-            if (response?.data?.success) {
+            if (response?.data?.goalID) {
                 addToast("Goal deleted successfully", { appearance: "success" });
+                setShowActionsId(null);
                 reFetchEmployee();
+            }else{
+                addToast("Failed to delete the goal", { appearance: "error" });
             }
         } catch (err) {
             console.error("Delete Goal Error:", err);
@@ -166,14 +156,8 @@ const GoalsSection = ({selectedUser, goals, reFetchEmployee}) => {
                                         <FormSelect
                                             name={field}
                                             options={getSelectOptions(field === "statusID" ? employeeStatuses : developmentPlans )}
-                                            value={getSelectOptions(field === "statusID" ? employeeStatuses : developmentPlans).find((option) => option.value === Number(newGoal[field])) || "" }
-                                            onChange={(e) =>handleInputChange({
-                                                    target: {
-                                                        name: field,
-                                                        value: e.target.value,
-                                                    },
-                                                }, true)
-                                            }
+                                            formValues={newGoal}
+                                            onChange={(e) => handleInputChange(e)}
                                             showErrors={false}
                                             required
                                         />
@@ -208,16 +192,14 @@ const GoalsSection = ({selectedUser, goals, reFetchEmployee}) => {
                                     {["name", "targetDate", "statusID", "comments"].map((field) => (
                                         <td className="px-4 py-3" key={field}>
                                             {["statusID"].includes(field) ? (
-                                        <FormSelect
-                                        name={field}
-                                        options={getSelectOptions(field === "statusID" ? employeeStatuses : developmentPlans)}
-                                        value={getSelectOptions(field === "statusID" ? employeeStatuses : developmentPlans)
-                                          .find((option) => option.value === Number(editGoalData[field])) || ""}
-                                        onChange={(e) => handleInputChange(e)}
-                                        showErrors={false}
-                                        required
-                                      />
-                                      
+                                                <FormSelect
+                                                    name={field}
+                                                    options={getSelectOptions(field === "statusID" ? employeeStatuses : developmentPlans)}
+                                                    formValues={editGoalData}
+                                                    onChange={(e) => handleInputChange(e)}
+                                                    showErrors={false}
+                                                    required
+                                                />
                                     ) : (
                                         <FormInput
                                         type={field === "targetDate" ? "date" : "text"}
@@ -225,7 +207,7 @@ const GoalsSection = ({selectedUser, goals, reFetchEmployee}) => {
                                         formValues={{ [field]: editGoalData[field] }}
                                         onChange={(e) => handleInputChange(e)}
                                       />
-                                      
+
                                             )}
                                         </td>
                                     ))}
@@ -272,10 +254,7 @@ const GoalsSection = ({selectedUser, goals, reFetchEmployee}) => {
 
                                                 <TrashIcon
                                                     className="w-5 h-5 text-text-color cursor-pointer"
-                                                    onClick={() => {
-                                                        handleDeleteGoal(goal.id);
-                                                        setShowActionsId(null);
-                                                      }}
+                                                    onClick={() => handleDeleteGoal(goal.id)}
                                                 />
                                                 <XMarkIcon
                                                     className="w-5 h-5 text-text-color cursor-pointer"

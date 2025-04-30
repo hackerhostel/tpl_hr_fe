@@ -1,24 +1,24 @@
-import React, { useEffect, useState } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import React, {useState} from "react";
+import {useSelector} from "react-redux";
 import {
     CheckBadgeIcon,
-    EllipsisVerticalIcon,
-    PlusCircleIcon,
     ChevronLeftIcon,
     ChevronRightIcon,
+    EllipsisVerticalIcon,
     PencilIcon,
+    PlusCircleIcon,
     TrashIcon,
     XMarkIcon,
 } from "@heroicons/react/24/outline";
 import FormInput from "../FormInput";
 import FormSelect from "../FormSelect"
-import { useToasts } from "react-toast-notifications";
+import {useToasts} from "react-toast-notifications";
 import axios from "axios";
-import { selectTrainingLevels, doGetFormData } from "../../state/slice/masterDataSlice";
+import {selectTrainingLevels} from "../../state/slice/masterDataSlice";
+import {getSelectOptions} from "../../utils/commonUtils.js";
 
-const CertificationSection = () => {
+const CertificationSection = ({selectedUser, certifications, reFetchEmployee}) => {
     const { addToast } = useToasts();
-    const [certList, setCertList] = useState([]);
     const [addingNew, setAddingNew] = useState(false);
     const [showActionsId, setShowActionsId] = useState(null);
     const [editingId, setEditingId] = useState(null);
@@ -35,36 +35,11 @@ const CertificationSection = () => {
     const [editingCertId, setEditingCertId] = useState(null);
     const [editCertData, setEditCertData] = useState({});
     const trainingStatus = useSelector(selectTrainingLevels);
-    const dispatch = useDispatch();
     const [currentPage, setCurrentPage] = useState(1);
     const rowsPerPage = 5;
 
-
-    useEffect(() => {
-        dispatch(doGetFormData());
-    }, [dispatch]);
-
-
-    const fetchCertifications = async () => {
-        try {
-            const whoamiRes = await axios.get("/employees/who-am-i");
-            const employeeID = whoamiRes?.data?.body?.userDetails?.id;
-
-            const res = await axios.get(`/employees/${employeeID}`);
-            const certifications = res?.data?.body?.certifications || [];
-
-            setCertList(certifications);
-        } catch (error) {
-            console.error("Failed to fetch certifications:", error?.response?.data || error.message);
-        }
-    };
-
-    useEffect(() => {
-        fetchCertifications();
-    }, []);
-
-    const totalPages = Math.ceil(certList.length / rowsPerPage);
-    const currentPageContent = certList.slice(
+    const totalPages = Math.ceil(certifications.length / rowsPerPage);
+    const currentPageContent = certifications.slice(
 
         (currentPage - 1) * rowsPerPage,
         currentPage * rowsPerPage
@@ -89,20 +64,15 @@ const CertificationSection = () => {
         }
 
         try {
-            const whoamiRes = await axios.get("/employees/who-am-i");
-            const employeeID = whoamiRes?.data?.body?.userDetails?.id;
-            const email = whoamiRes?.data?.body?.userDetails?.email;
-
             const payload = {
-                certification: { ...newCert, employeeID },
-                createdBy: email
+                certification: newCert,
             };
 
-            const response = await axios.post(`/employees/${employeeID}/certifications`, payload);
+            const response = await axios.post(`/employees/${selectedUser.id}/certifications`, payload);
 
             if (response?.data?.certificationID) {
                 addToast("Certification added successfully", { appearance: "success" });
-                fetchCertifications();
+                reFetchEmployee()
                 setAddingNew(false);
                 setNewCert({
                     name: "",
@@ -112,7 +82,7 @@ const CertificationSection = () => {
                     trainingStatusID: ""
                 });
             } else {
-                throw new Error("Certification ID not returned");
+                addToast("Failed to add certification", {appearance: "error"});
             }
         } catch (err) {
             console.error(err);
@@ -122,30 +92,27 @@ const CertificationSection = () => {
 
     const handleEditCertification = async (certificationID) => {
         try {
-            const whoamiRes = await axios.get("/employees/who-am-i");
-            const employeeID = whoamiRes?.data?.body?.userDetails?.id;
-
-
             const { institution, ...updatedCertData } = editCertData;
 
             const payload = {
                 certification: {
                     ...updatedCertData,
-                    institution: editCertData.institution || undefined,  
-                    employeeID,
+                    institution: editCertData.institution || undefined,
                     certificationID
                 }
             };
 
             const response = await axios.put(
-                `/employees/${employeeID}/certifications/${certificationID}`,
+                `/employees/${selectedUser.id}/certifications/${certificationID}`,
                 payload
             );
 
             if (response?.data?.certificationID) {
                 addToast("Certification updated successfully", { appearance: "success" });
-                fetchCertifications();
+                reFetchEmployee()
                 setEditingCertId(null);
+            } else {
+                addToast("Failed to update certification", {appearance: "error"});
             }
         } catch (err) {
             console.error("Update error:", err);
@@ -157,14 +124,11 @@ const CertificationSection = () => {
 
     const handleDeleteCertification = async (certificationID) => {
         try {
-            const whoamiRes = await axios.get("/employees/who-am-i");
-            const employeeID = whoamiRes?.data?.body?.userDetails?.id;
-
-            const res = await axios.delete(`/employees/${employeeID}/certifications/${certificationID}`);
+            const res = await axios.delete(`/employees/${selectedUser.id}/certifications/${certificationID}`);
 
             if (res?.status === 200) {
                 addToast("Certification deleted successfully", { appearance: "success" });
-                fetchCertifications();
+                reFetchEmployee()
             } else {
                 addToast("Failed to delete certification", { appearance: "error" });
             }
@@ -173,18 +137,6 @@ const CertificationSection = () => {
             addToast("Failed to delete certification", { appearance: "error" });
         }
     };
-
-    const getSelectOptions = (options, labelKey = "name") => {
-        if (options && options.length) {
-            return options.map((o) => {
-                const value = Number(o?.id || o?.rID || o?.checklistID);
-                const label = o?.[labelKey] || o?.value || o?.title || "Unnamed";
-                return { value, label };
-            });
-        }
-        return [];
-    };
-
 
     return (
         <div className="w-full mt-8 px-6 py-4 bg-white rounded-md">
@@ -277,13 +229,8 @@ const CertificationSection = () => {
                                                <FormSelect
                                                    name={field}
                                                    options={getSelectOptions(trainingStatus)}
-                                                   value={trainingStatus.find((option) => option.id === Number(newCert[field]))?.id || ""}
-                                                   onChange={(e) =>
-                                                       handleInputChange(
-                                                           { target: { name: field, value: e.target.value } },
-                                                           false
-                                                       )
-                                                   }
+                                                   formValues={editCertData}
+                                                   onChange={(e) => handleInputChange(e, false)}
                                                    showErrors={false}
                                                    required
                                                />
@@ -360,7 +307,7 @@ const CertificationSection = () => {
                 </tbody>
             </table>
 
-            {certList.length > rowsPerPage && (
+            {certifications.length > rowsPerPage && (
                 <div className="w-full flex gap-5 items-center justify-end mt-4">
                     <button
                         onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
