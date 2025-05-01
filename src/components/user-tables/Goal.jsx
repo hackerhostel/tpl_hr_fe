@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import React, {useEffect, useState} from "react";
+import {useDispatch, useSelector} from "react-redux";
 import {
     CheckBadgeIcon,
     ChevronLeftIcon,
@@ -12,7 +12,7 @@ import {
 } from "@heroicons/react/24/outline";
 import FormInput from "../FormInput";
 import FormSelect from "../FormSelect"
-import { useToasts } from "react-toast-notifications";
+import {useToasts} from "react-toast-notifications";
 import {
     doGetFormData,
     selectDevelopmentPlans,
@@ -20,7 +20,7 @@ import {
     selectTrainingLevels
 } from "../../state/slice/masterDataSlice";
 import axios from "axios";
-import { getSelectOptions } from "../../utils/commonUtils.js";
+import {getSelectOptions} from "../../utils/commonUtils.js";
 
 const GoalsSection = ({ selectedUser, goals, reFetchEmployee }) => {
     const { addToast } = useToasts();
@@ -122,6 +122,7 @@ const GoalsSection = ({ selectedUser, goals, reFetchEmployee }) => {
                 addToast("Goal deleted successfully", { appearance: "success" });
                 setShowActionsId(null);
                 reFetchEmployee();
+                setConfirmDeleteId(null)
             } else {
                 addToast("Failed to delete the goal", { appearance: "error" });
             }
@@ -294,7 +295,7 @@ const GoalsSection = ({ selectedUser, goals, reFetchEmployee }) => {
                                 Cancel
                             </button>
                             <button
-                                onClick={handleDeleteGoal}
+                                onClick={() => handleDeleteGoal(confirmDeleteId)}
                                 className="px-4 py-2 rounded bg-primary-pink text-white text-sm"
                             >
                                 Delete

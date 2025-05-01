@@ -5,12 +5,10 @@ import axios from "axios";
 import FormSelect from "../FormSelect.jsx";
 import {getSelectOptions} from "../../utils/commonUtils.js";
 import {useSelector} from "react-redux";
-import {selectFeedBackTypes} from "../../state/slice/masterDataSlice.js";
+import {clickedUser} from "../../state/slice/projectUsersSlice.js";
 
 // FeedbackPopup Component
-const FeedbackPopup = ({isOpen, onClose, onAddFeedback, feedbackTypes}) => {
-  const [relationship, setRelationship] = useState("");
-  const [comments, setComments] = useState("");
+const FeedbackPopup = ({isOpen, onClose, onAddFeedback, feedbackTypes, selectedUser, reFetchFeedback}) => {
   const [rating, setRating] = useState(0);
 
   const [formValues, setFormValues] = useState({
@@ -18,52 +16,9 @@ const FeedbackPopup = ({isOpen, onClose, onAddFeedback, feedbackTypes}) => {
     comments: "",
   });
 
-  useEffect(() => {
-    const fetchFeedbacks = async () => {
-      try {
-        // Get logged-in employee ID
-        const whoamiRes = await axios.get("/employees/who-am-i");
-        const employeeID = whoamiRes?.data?.body?.userDetails?.id;
-
-        // Get feedbacks for the employee
-        const res = await axios.get(`/employees/${employeeID}`);
-        const feedbackList = res?.data?.body?.feedback || [];
-
-        // console.log("feedback", feedbackList)
-
-        // Get employee list for name mapping
-        const employeeRes = await axios.get(`/organizations/employees`);
-        const employees = employeeRes.data.body;
-
-
-        // Format feedbacks
-        const formatted = feedbackList.map((f) => {
-          const creator = employees.find((e) => e.id === f.createdBy);
-          const creatorName = creator ? `${creator.firstName} ${creator.lastName}` : "Unknown";
-
-          return {
-            id: f.id,
-            name: creatorName, // <- this now shows who gave the feedback
-            role: setRelationship(f.feedbackType),
-            date: new Date(f.createdDate).toLocaleDateString(),
-            rating: f.rating,
-            feedback: f.comments,
-          };
-        });
-      } catch (error) {
-        console.error("Failed to fetch feedbacks:", error?.response?.data || error.message);
-      }
-    };
-
-    fetchFeedbacks();
-  }, []);
-
-
-
   const handleAddFeedback = async () => {
     try {
-      const whoamiRes = await axios.get("/employees/who-am-i");
-      const employeeID = whoamiRes?.data?.body?.userDetails?.id;
+      const employeeID = selectedUser?.id;
 
       const payload = {
         ...formValues,
@@ -167,49 +122,50 @@ const FeedbackPopup = ({isOpen, onClose, onAddFeedback, feedbackTypes}) => {
 
 // FeedbackCard Component
 const FeedbackCard = ({feedbackTypes}) => {
+  const selectedUserData = useSelector(clickedUser);
   const [feedbackData, setFeedbackData] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
 
+  const fetchFeedbacks = async () => {
+    try {
+      const employeeID = selectedUserData?.id
+
+      // Fetch feedbacks
+      const res = await axios.get(`/employees/${employeeID}`);
+      const feedbackList = res?.data?.body?.feedback || [];
+
+      // Fetch employee list
+      const employeeRes = await axios.get(`/organizations/employees`);
+      const employees = employeeRes.data.body;
+
+      const formatted = feedbackList.map((f) => {
+        const creator = employees.find((e) => e.id === f.createdBy);
+        const creatorName = creator ? `${creator.firstName} ${creator.lastName}` : "Unknown";
+        const feedbackGiverRole = feedbackTypes.find(fb => fb.id === f.feedbackType)
+
+        return {
+          id: f.id,
+          name: creatorName,
+          role: feedbackGiverRole?.id ? feedbackGiverRole?.name : 'Unknown',
+          date: new Date(f.createdDate).toLocaleDateString(),
+          rating: f.rating,
+          feedback: f.comments,
+        };
+      });
+
+      setFeedbackData(feedbackList.length ? formatted : []);
+    } catch (error) {
+      console.error("Failed to fetch feedbacks:", error?.response?.data || error.message);
+    }
+  };
+
   useEffect(() => {
-    const fetchFeedbacks = async () => {
-      try {
-        const whoamiRes = await axios.get("/employees/who-am-i");
-        const employeeID = whoamiRes?.data?.body?.userDetails?.id;
-
-        // Fetch feedbacks
-        const res = await axios.get(`/employees/${employeeID}`);
-        const feedbackList = res?.data?.body?.feedback || [];
-
-        // Fetch employee list
-        const employeeRes = await axios.get(`/organizations/employees`);
-        const employees = employeeRes.data.body;
-
-        const formatted = feedbackList.map((f) => {
-          const creator = employees.find((e) => e.id === f.createdBy);
-          const creatorName = creator ? `${creator.firstName} ${creator.lastName}` : "Unknown";
-          const feedbackGiverRole = feedbackTypes.find(fb => fb.id === f.feedbackType)
-
-          return {
-            id: f.id,
-            name: creatorName,
-            role: feedbackGiverRole?.id ? feedbackGiverRole?.name : 'Unknown',
-            date: new Date(f.createdDate).toLocaleDateString(),
-            rating: f.rating,
-            feedback: f.comments,
-          };
-        });
-
-        setFeedbackData(formatted);
-      } catch (error) {
-        console.error("Failed to fetch feedbacks:", error?.response?.data || error.message);
-      }
-    };
-
     fetchFeedbacks();
-  }, [feedbackTypes]);
+  }, [feedbackTypes, selectedUserData]);
 
   const handleAddFeedback = (newFeedback) => {
+    setIsPopupOpen(false)
     setFeedbackData((prev) => [...prev, newFeedback]);
     setCurrentIndex(feedbackData.length);
   };
@@ -315,6 +271,8 @@ const FeedbackCard = ({feedbackTypes}) => {
         onClose={() => setIsPopupOpen(false)}
         onAddFeedback={handleAddFeedback}
         feedbackTypes={feedbackTypes}
+        selectedUser={selectedUserData}
+        reFetchFeedback={fetchFeedbacks}
       />
     </div>
   );

@@ -140,7 +140,7 @@ const CertificationSection = ({ selectedUser, certifications, reFetchEmployee })
             console.error("Delete error:", error);
             addToast("Failed to delete certification", { appearance: "error" });
         } finally {
-            setConfirmDeleteId(null); // close modal
+            setConfirmDeleteId(null);
         }
     };
 
@@ -166,7 +166,7 @@ const CertificationSection = ({ selectedUser, certifications, reFetchEmployee })
                         <th className="py-3 px-4">Certification</th>
                         <th className="py-3 px-4">Due Date</th>
                         <th className="py-3 px-4">Expiry Date</th>
-                        <th className="py-3 px-4">Training</th>
+                        <th className="py-3 px-4">Status</th>
                         <th className="py-3 px-4">Institution</th>
                         <th className="py-3 px-4">Actions</th>
                     </tr>

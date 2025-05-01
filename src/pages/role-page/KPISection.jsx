@@ -99,6 +99,24 @@ const KPISection = ({
         }
     };
 
+    const handleDeleteKPI = async (kpiId) => {
+        try {
+            const response = await axios.delete(`designations/${roleId}/kpis/${kpiId}`);
+            const deleted = response?.status;
+
+            if (deleted) {
+                addToast('KPI Successfully Deleted', { appearance: 'success' });
+                reFetchRole();
+                setConfirmDeleteId(null);
+            } else {
+                addToast('Failed To Delete The KPI', { appearance: 'error' });
+            }
+        } catch (error) {
+            console.log(error);
+            addToast('Failed To Delete The KPI', { appearance: 'error' });
+        }
+    };
+
     const GenerateRow = ({ kpi }) => {
         const initialData = {
             name: kpi?.name,
@@ -115,14 +133,10 @@ const KPISection = ({
             setEditRow({ ...editRow, [name]: isText ? value : Number(value) });
         };
 
-
-
         const onHideEdit = () => {
             setIsEditing(false)
             setEditRow(initialData)
         }
-
-
 
         const handleUpdateKPI = async () => {
             try {
@@ -140,27 +154,6 @@ const KPISection = ({
                 addToast('Failed To Update The KPI', { appearance: 'error' });
             }
         };
-
-
-
-
-        const handleDeleteKPI = async (kpiId) => {
-            try {
-                const response = await axios.delete(`designations/${roleId}/kpis/${kpiId}`);
-                const deleted = response?.status;
-
-                if (deleted) {
-                    addToast('KPI Successfully Deleted', { appearance: 'success' });
-                    reFetchRole();
-                } else {
-                    addToast('Failed To Delete The KPI', { appearance: 'error' });
-                }
-            } catch (error) {
-                console.log(error);
-                addToast('Failed To Delete The KPI', { appearance: 'error' });
-            }
-        };
-
 
         return (
             <tr className="border-b border-gray-200">
@@ -191,11 +184,10 @@ const KPISection = ({
                                     <TrashIcon
                                         className="w-5 h-5 text-text-color cursor-pointer"
                                         onClick={() => {
-                                            confirmDeleteKPI(kpi.id);
+                                            setConfirmDeleteId(kpi.id);
                                             setShowActionsId(null);
                                         }}
                                     />
-
                                     <XMarkIcon
                                         className="w-5 h-5 text-text-color cursor-pointer"
                                         onClick={() => setShowActionsId(null)}
@@ -266,8 +258,6 @@ const KPISection = ({
             </tr>
         );
     };
-
-
 
     return (
         <div className="bg-white">
@@ -364,14 +354,9 @@ const KPISection = ({
                                     <button
                                         onClick={() => setConfirmDeleteId(null)}
                                         className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 text-sm"
-                                    >
-                                        Cancel
-                                    </button>
+                                    >Cancel</button>
                                     <button
-                                        onClick={() => {
-                                            handleDeleteKPI(confirmDeleteId);
-                                            setConfirmDeleteId(null);
-                                        }}
+                                        onClick={()=> handleDeleteKPI(confirmDeleteId)}
                                         className="px-4 py-2 rounded bg-primary-pink text-white text-sm"
                                     >
                                         Delete
