@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from "react";
+import React, {useEffect, useState} from "react";
 import FormInput from "../../components/FormInput";
 import WYSIWYGInput from "../../components/WYSIWYGInput";
 import "./custom-styles.css";
@@ -39,9 +39,13 @@ const RoleContent = () => {
     useEffect(() => {
         if (roleResponse?.kpi && roleResponse?.kpi.length) {
             setKPIs(roleResponse?.kpi)
+        } else {
+            setKPIs([])
         }
         if (roleResponse?.competencies && roleResponse?.competencies.length) {
             setCompetencies(roleResponse?.competencies)
+        } else {
+            setCompetencies([])
         }
     }, [roleResponse]);
 

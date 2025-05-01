@@ -213,7 +213,42 @@ const PerformanceContentPage = () => {
                 addToast('Failed to add the performance review', {appearance: 'error'});
             }
         } else {
-            addToast('Review update is WIP', {appearance: 'warning'});
+            const payload = {
+                employeeID: selectedEmployee,
+                cycleID: selectedCycle,
+                comment: reviewCycle?.comment || 'N/A',
+                reviewItems: []
+            };
+
+            let fallbackStatus = formData?.kpiStatuses.find(ks => ks.name === 'Not Achieved');
+
+            if (!fallbackStatus && formData?.kpiStatuses.length) {
+                fallbackStatus = formData.kpiStatuses[0];
+            }
+
+            for (const rItem of reviewItems) {
+                payload.reviewItems.push({
+                    itemID: rItem?.reviewItemID,
+                    kpiID: rItem?.kpiID,
+                    statusID: rItem?.statusID || fallbackStatus?.id,
+                    kpiScore: rItem?.kpiScore && rItem?.kpiScore !== '' ? rItem?.kpiScore : '0',
+                    feedback: rItem?.feedback || 'N/A',
+                })
+            }
+
+            try {
+                const response = await axios.put(`performance-reviews/${reviewCycle?.reviewID}`, {review: payload})
+                const updated = response?.data?.body
+
+                if (updated) {
+                    addToast('Performance review successfully updated', {appearance: 'success'});
+                    reFetchPerformanceReviews()
+                } else {
+                    addToast('Failed to update the performance review', {appearance: 'error'});
+                }
+            } catch (error) {
+                addToast('Failed to update the performance review', {appearance: 'error'});
+            }
         }
     };
 
